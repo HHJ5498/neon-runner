@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: CUSTOM SPEED</title>
+    <title>NEON DASH: CUSTOMIZER</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
@@ -11,18 +11,29 @@
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; width: 100%; background: #000; overflow: hidden; position: fixed; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; }
+        
         #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #010103; overflow: hidden; }
         canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; background: #000; }
+        
         #stat-bar { width: 100%; height: 55px; background: #080808; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
         #ad-bottom-zone { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        #title { color: #fff; font-size: 32px; margin-bottom: 20px; font-weight: 900; text-shadow: 0 0 10px var(--neon-blue); }
+
+        /* 💡 속도 조절 슬라이더 스타일 */
+        .settings { background: #111; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 25px; width: 280px; text-align: center; }
+        .settings label { color: #aaa; font-size: 14px; display: block; margin-bottom: 10px; font-weight: bold; }
+        #speed-slider { width: 100%; cursor: pointer; accent-color: var(--neon-blue); }
+        #speed-val { color: var(--neon-blue); font-size: 20px; font-weight: 900; margin-left: 5px; }
+
+        .btn-start { background: var(--neon-blue); color: #000; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; box-shadow: 0 0 20px var(--neon-blue); cursor: pointer; border: none; transition: 0.2s; }
+        .btn-start:active { transform: scale(0.95); box-shadow: 0 0 5px var(--neon-blue); }
+
         .label { font-size: 10px; color: #555; font-weight: bold; }
         .val { color: white; font-size: 16px; font-weight: 900; }
         .fever-wrap { width: 60px; height: 8px; background: #111; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); }
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        .btn-start { background: var(--neon-blue); color: #000; padding: 20px 60px; font-size: 24px; font-weight: 900; border-radius: 50px; box-shadow: 0 0 25px var(--neon-blue); cursor: pointer; border: none; }
-        #title { color: #fff; font-size: 32px; margin-bottom: 30px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-blue); }
-        #mode-info { color: var(--gold); font-size: 12px; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -31,8 +42,13 @@
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
             <div id="title">NEON DASH</div>
+            
+            <div class="settings">
+                <label>GAME SPEED: <span id="speed-val">12</span></label>
+                <input type="range" id="speed-slider" min="1" max="16" value="12">
+            </div>
+
             <button class="btn-start" id="start-btn">START</button>
-            <div id="mode-info">LOADING...</div>
         </div>
     </div>
 
@@ -54,22 +70,35 @@
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
-    // 💡 사용자가 요청하신 속도 설정 (PC: 12, Android: 18)
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const config = {
-        baseSpeed: isMobile ? 18 : 12,    // 안드로이드 18, PC 12
-        jumpPower: isMobile ? -24 : -21,  // 속도에 맞춘 최적 점프력
-        gravity: 1.4,
-        spawnRate: isMobile ? 28 : 38     // 속도 차이에 따른 장애물 생성 간격 조정
-    };
+    // 💡 물리 엔진 및 설정 관리
+    const slider = document.getElementById('speed-slider');
+    const speedText = document.getElementById('speed-val');
     
-    document.getElementById('mode-info').innerText = isMobile ? "MOBILE MODE: SPEED 18" : "PC MODE: SPEED 12";
+    const config = {
+        baseSpeed: 12,
+        jumpPower: -22,
+        gravity: 1.4,
+        spawnRate: 35
+    };
+
+    // 슬라이더 값 변경 시 실시간 반영
+    slider.oninput = function() {
+        const val = parseInt(this.value);
+        speedText.innerText = val;
+        config.baseSpeed = val;
+        
+        // 💡 속도에 따른 물리 밸런스 자동 조절
+        config.jumpPower = -18 - (val * 0.4); // 속도가 빠를수록 더 높게 점프
+        config.spawnRate = Math.max(15, 50 - Math.floor(val * 1.5)); // 속도가 빠를수록 장애물 자주 생성
+    };
 
     const game = {
         isLive: false, score: 0, gauge: 0, frame: 0, fever: false,
         start() {
             this.isLive = true; this.score = 0; this.gauge = 0; this.frame = 0;
-            p.y = 350; p.dy = 0; p.jCount = 0; obs = []; coins = [];
+            p.y = 350; p.dy = 0; p.jCount = 0; 
+            p.j = config.jumpPower; // 시작 시점의 설정값 적용
+            obs = []; coins = [];
             document.getElementById('ovl').style.display = 'none';
         },
         end() {
@@ -79,29 +108,26 @@
         }
     };
 
-    const p = { x: 120, y: 350, dy: 0, g: config.gravity, j: config.jumpPower, jCount: 0 };
+    const p = { x: 120, y: 350, dy: 0, g: config.gravity, j: -22, jCount: 0 };
     let obs = [], coins = [];
 
     const btn = document.getElementById('start-btn');
     btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); game.start(); };
 
     function handleAction(e) {
-        if (!game.isLive || e.target.id === 'start-btn') return;
-        if (p.jCount < 2) { 
-            p.dy = p.j; 
-            p.jCount++; 
-        }
+        if (!game.isLive || e.target.closest('.settings') || e.target.id === 'start-btn') return;
+        if (p.jCount < 2) { p.dy = p.j; p.jCount++; }
     }
 
     window.addEventListener('mousedown', handleAction);
-    window.addEventListener('touchstart', (e) => { handleAction(e); if(e.cancelable) e.preventDefault(); }, { passive: false });
+    window.addEventListener('touchstart', (e) => { handleAction(e); }, { passive: false });
 
     function update() {
         if(!game.isLive) return;
         game.frame++;
         
-        let currentSpeed = (config.baseSpeed + (game.score/900)) * (game.fever ? 1.6 : 1); 
-        game.score += currentSpeed / 11;
+        let currentSpeed = (config.baseSpeed + (game.score/1200)) * (game.fever ? 1.5 : 1); 
+        game.score += currentSpeed / 12;
         
         p.dy += p.g; p.y += p.dy;
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
@@ -120,16 +146,16 @@
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            if(!game.fever && Math.abs(p.x - o.x) < 32 && Math.abs(p.y - o.y) < 35) game.end();
+            if(!game.fever && Math.abs(p.x - o.x) < 30 && Math.abs(p.y - o.y) < 32) game.end();
             if(o.x < -100) obs.splice(i, 1);
         });
 
         coins.forEach((c, i) => {
             c.x -= currentSpeed;
-            if(game.fever) { c.x += (p.x - c.x) * 0.22; c.y += (p.y - c.y) * 0.22; }
-            if(Math.abs(p.x - c.x) < 50 && Math.abs(p.y - c.y) < 50) {
+            if(game.fever) { c.x += (p.x - c.x) * 0.2; c.y += (p.y - c.y) * 0.2; }
+            if(Math.abs(p.x - c.x) < 55 && Math.abs(p.y - c.y) < 55) {
                 coins.splice(i, 1);
-                game.gauge = Math.min(100, game.gauge + 9);
+                game.gauge = Math.min(100, game.gauge + 10);
                 if(game.gauge >= 100 && !game.fever) game.fever = true;
             }
             if(c.x < -100) coins.splice(i, 1);
