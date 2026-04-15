@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner Difficulty Master</title>
+    <title>Neon Runner Pro Ad-Ready</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
+
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; touch-action: none; }
         html, body { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
         body { display: flex; flex-direction: column; }
 
-        /* 게임 영역: 모바일 버튼 잘림 방지 (안전 비율 45vh) */
+        /* 모바일 최적화 비율 45vh */
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-start;
             background: var(--bg); padding: 5px; overflow: hidden;
@@ -52,6 +54,16 @@
         }
 
         #stat-bar { height: 40px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 12px; font-weight: bold; }
+        
+        /* 광고 영역 스타일 */
+        #ad-container { 
+            height: 60px; 
+            background: #000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border-top: 1px solid #222;
+        }
     </style>
 </head>
 <body>
@@ -83,18 +95,30 @@
         <div id="top-score" style="color:var(--gold);">TOP: 0</div>
     </div>
 
+    <div id="ad-container">
+        <ins class="adsbygoogle"
+             style="display:block; width:320px; height:50px"
+             data-ad-client="ca-pub-7503206245117361"
+             data-ad-slot="9285335402"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+
     <script>
+    // [자바스크립트 로직은 위에서 드린 꾹 누르기 최신 버전과 동일합니다]
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         cvs.width = 900; cvs.height = 450;
-
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
         const sInput = document.getElementById('s-input'), sVal = document.getElementById('s-val');
         const dBtn = document.querySelectorAll('.diff-btn');
 
         let isLive = false, score = 0, curLv = 2;
-        let p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
-        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.5, freqMin: 300, freqMax: 600 };
+        let p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
+        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.8 };
+
+        const JUMP_PARAMS = { baseForce: -16, holdForce: -2.3, maxHoldTime: 12 };
 
         sInput.oninput = () => { sVal.innerText = sInput.value; };
         dBtn.forEach(b => {
@@ -109,62 +133,59 @@
 
         startBtn.onclick = function(e) {
             e.stopPropagation();
-            // [난이도 로직] 난이도에 따른 속도 가중치와 장애물 빈도(타이머) 설정
             const baseSpd = parseInt(sInput.value);
             const lvMap = {
-                1: { grav: 3.0, spdMul: 0.7, fMin: 500, fMax: 800 },
-                2: { grav: 3.5, spdMul: 1.0, fMin: 300, fMax: 600 },
-                3: { grav: 3.8, spdMul: 1.2, fMin: 200, fMax: 450 },
-                4: { grav: 4.2, spdMul: 1.4, fMin: 150, fMax: 300 },
-                5: { grav: 4.6, spdMul: 1.7, fMin: 80,  fMax: 180 } // 지옥 난이도
+                1: { grav: 3.2, spdMul: 0.7, fMin: 500, fMax: 800 },
+                2: { grav: 3.8, spdMul: 1.0, fMin: 300, fMax: 600 },
+                3: { grav: 4.1, spdMul: 1.2, fMin: 200, fMax: 450 },
+                4: { grav: 4.4, spdMul: 1.4, fMin: 150, fMax: 300 },
+                5: { grav: 4.8, spdMul: 1.7, fMin: 80,  fMax: 180 }
             };
-            
-            const settings = lvMap[curLv];
-            cfg.spd = baseSpd * settings.spdMul;
-            cfg.grav = settings.grav;
-            cfg.freqMin = settings.fMin;
-            cfg.freqMax = settings.fMax;
-            
-            p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
+            const s = lvMap[curLv];
+            cfg.spd = baseSpd * s.spdMul; cfg.grav = s.grav; cfg.freqMin = s.fMin; cfg.freqMax = s.fMax;
+            p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
             obs = []; score = 0; isLive = true; cfg.timer = 0;
             ovl.style.display = 'none';
         };
 
-        const handleJump = (e) => {
+        const startJump = (e) => {
             if(!isLive || e.target.closest('.controls')) return;
             if(p.jc < 2) {
-                // 수직 점프 (오른쪽 추진력 dx 제거)
-                p.dy = (p.jc === 0) ? -36 : -33; 
-                p.jc++;
+                p.dy = (p.jc === 0) ? JUMP_PARAMS.baseForce : JUMP_PARAMS.baseForce * 0.85;
+                p.jc++; p.isJumping = true; p.jumpTime = 0;
             }
         };
+        const endJump = () => p.isJumping = false;
 
-        window.addEventListener('mousedown', handleJump);
+        window.addEventListener('mousedown', startJump);
+        window.addEventListener('mouseup', endJump);
         window.addEventListener('touchstart', (e) => {
-            if(isLive) e.preventDefault();
-            handleJump(e);
+            if(isLive && !e.target.closest('#ovl')) e.preventDefault();
+            startJump(e);
         }, { passive: false });
+        window.addEventListener('touchend', endJump);
+
+        function drawHeart(x, y, s, col, empty) {
+            ctx.save(); ctx.translate(x, y); ctx.beginPath();
+            ctx.bezierCurveTo(-s/2,-s/2,-s,s/4,0,s); ctx.bezierCurveTo(s,s/4,s/2,-s/2,0,0);
+            ctx.fillStyle = empty ? "#222" : col; ctx.fill(); ctx.restore();
+        }
 
         function loop() {
             if(isLive) {
-                // 시간에 따른 속도 증가도 난이도 영향 받음
                 let s = cfg.spd + (score / (2000 / curLv)); 
-                p.dy += cfg.grav;
-                p.y += p.dy;
-
-                if(p.y >= 350) { p.y = 350; p.dy = 0; p.jc = 0; }
+                if (p.isJumping && p.jumpTime < JUMP_PARAMS.maxJumpHoldTime) {
+                    p.dy += JUMP_PARAMS.holdForce; p.jumpTime++;
+                } else { p.isJumping = false; }
+                p.dy += cfg.grav; p.y += p.dy;
+                if(p.y >= 350) { p.y = 350; p.dy = 0; p.jc = 0; p.isJumping = false; }
                 if(p.inv > 0) p.inv--;
-                score += s/6; 
-                cfg.timer -= s;
-
-                // [난이도별 장애물 생성]
+                score += s/6; cfg.timer -= s;
                 if(cfg.timer <= 0) {
-                    let h = Math.random() > 0.5 ? 30 : 75; 
+                    let h = Math.random() > 0.5 ? 30 : 70; 
                     obs.push({ x: 950, y: 400-h, w: 35, h: h, s: s });
-                    // 난이도가 높을수록 cfg.freqMin/Max가 작아져서 더 자주 나옴
                     cfg.timer = (cfg.freqMin + Math.random() * (cfg.freqMax - cfg.freqMin)) * (15/s);
                 }
-
                 obs.forEach((o, i) => {
                     o.x -= o.s;
                     if(p.inv <= 0 && p.x+15 < o.x+o.w && p.x+25 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
@@ -175,19 +196,12 @@
                 });
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
-
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
             ctx.strokeStyle = "#444"; ctx.lineWidth = 1; ctx.strokeRect(0, 400, 900, 1);
-            
-            ctx.fillStyle = "#ffcc00";
-            for(let i=0; i<p.hp; i++) ctx.fillRect(30+(i*25), 30, 15, 15);
-            
+            for(let i=0; i<3; i++) drawHeart(40+(i*30), 40, 12, "#ffcc00", i >= p.hp);
             ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0,242,255,0.2)");
             ctx.fillRect(p.x, p.y, 40, 50);
-            
-            ctx.fillStyle = "#ff0077"; 
-            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-            
+            ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
             requestAnimationFrame(loop);
         }
         loop();
