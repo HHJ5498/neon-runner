@@ -3,35 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: AI ULTIMATE FIX</title>
+    <title>NEON DASH: ULTIMATE AI</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
-        :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; }
+        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: -apple-system, sans-serif; }
         
+        /* 게임 뷰포트 */
         #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #050508; overflow: hidden; }
-        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; z-index: 1; }
+        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; z-index: 1; touch-action: none; }
         
-        /* 메뉴 레이어 */
+        /* 시작 메뉴 및 게임오버 레이어 */
         .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        #title { color: #fff; font-size: 32px; font-weight: 900; text-shadow: 0 0 15px #00f2ff; margin-bottom: 20px; }
+        #title { color: #fff; font-size: 32px; font-weight: 900; text-shadow: 0 0 15px #00f2ff; margin-bottom: 20px; text-align: center; }
         
         .settings-box { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #00f2ff; margin-bottom: 25px; width: 280px; text-align: center; }
+        .settings-box label { color: #888; font-size: 11px; font-weight: bold; letter-spacing: 1px; display: block; margin-bottom: 10px; }
         #speed-slider { width: 100%; cursor: pointer; accent-color: #00f2ff; margin: 10px 0; }
         #speed-display { color: #00f2ff; font-size: 28px; font-weight: 900; }
 
-        .btn-start { background: #00f2ff; color: #000; padding: 15px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px #00f2ff; }
+        .btn-start { background: #00f2ff; color: #000; padding: 18px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px #00f2ff; }
 
         /* 하단 상태바 */
-        #stat-bar { width: 100%; height: 55px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #333; }
+        #stat-bar { width: 100%; height: 55px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
         .val { color: white; font-size: 16px; font-weight: 900; }
         .fever-bar { width: 80px; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #ff0077); }
         
-        #ad-bottom { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; }
+        /* 애드센스 영역 */
+        #ad-container { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -41,11 +43,11 @@
         <div id="ovl" class="overlay">
             <div id="title">NEON DASH AI</div>
             <div class="settings-box">
-                <p style="color:#888; font-size:12px; font-weight:bold;">SET SPEED</p>
+                <label>SYSTEM SPEED & DIFFICULTY</label>
                 <input type="range" id="speed-slider" min="1" max="16" value="10">
                 <div id="speed-display">10</div>
             </div>
-            <button class="btn-start" id="start-btn">GAME START</button>
+            <button class="btn-start" id="start-btn">RUN SYSTEM</button>
         </div>
     </div>
 
@@ -55,37 +57,49 @@
         <div id="gauge-text" class="val" style="color:#ffcc00;">0%</div>
     </div>
 
-    <div id="ad-bottom">
-        <ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9998817128"></ins>
+    <div id="ad-container">
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:320px;height:50px"
+             data-ad-client="ca-pub-7503206245117361"
+             data-ad-slot="9998817128"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
     <script>
+    /** * [AI 심뮬레이션 수정 사항]
+     * 1. 캔버스 색상 상수화 (CSS 변수 제거)
+     * 2. 모바일/PC 입력 통합 핸들러 (이벤트 전파 방지)
+     * 3. AI 기반 2단 점프 궤적 최적화
+     */
     const cvs = document.getElementById('cvs');
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
-
-    // 색상 상수 (자바스크립트 인식용)
-    const COLORS = { blue: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508' };
 
     const slider = document.getElementById('speed-slider');
     const display = document.getElementById('speed-display');
     const ovl = document.getElementById('ovl');
     
-    let config = { baseSpeed: 10, j1: -22, j2: -18, gravity: 1.2, spawnTimer: 0 };
-    
-    slider.oninput = function() {
-        config.baseSpeed = parseInt(this.value);
-        display.innerText = this.value;
+    // 게임 엔진 설정
+    let config = { 
+        baseSpeed: 10, 
+        j1: -21, 
+        j2: -18, 
+        gravity: 1.2, 
+        spawnTimer: 0 
+    };
+
+    slider.oninput = (e) => {
+        config.baseSpeed = parseInt(e.target.value);
+        display.innerText = e.target.value;
     };
 
     const game = {
         isLive: false, score: 0, gauge: 0, fever: false,
         patterns: [
-            { items: [350] },
-            { items: [350, 350] },
-            { items: [350, 220] },
-            { items: [350, 150] }
+            { items: [350] }, // 바닥 단일
+            { items: [350, 350] }, // 연속 2개
+            { items: [350, 200] }, // 고저차
+            { items: [250, 250] }  // 공중 장애물
         ],
         start() {
             this.isLive = true; this.score = 0; this.gauge = 0; this.fever = false;
@@ -95,7 +109,7 @@
         },
         over() {
             this.isLive = false;
-            document.getElementById('title').innerText = "GAME OVER";
+            document.getElementById('title').innerText = "SYSTEM REBOOT";
             ovl.style.display = 'flex';
         }
     };
@@ -103,74 +117,93 @@
     const p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0 };
     let obs = [], coins = [];
 
-    // 💡 AI 물리 엔진 동기화
+    // AI 물리 동기화: 속도에 따라 중력과 점프력을 실시간 미세조정
     function syncAI(speed) {
-        p.g = speed < 9 ? 0.75 + (speed * 0.04) : 1.0 + (speed * 0.05);
-        config.j1 = -(17 + (speed * 0.75));
-        config.j2 = config.j1 * 0.85;
+        // 속도 9를 기점으로 물리 법칙 커브 변경
+        p.g = speed < 9 ? 0.7 + (speed * 0.05) : 1.1 + (speed * 0.04);
+        config.j1 = -(17 + (speed * 0.7));
+        config.j2 = config.j1 * 0.82;
     }
 
-    // 💡 스마트 장애물 생성
-    function spawnSmart(speed) {
+    // AI 장애물 생성기: 속도 비례 안전 거리 확보 로직
+    function spawnAI(speed) {
         const pattern = game.patterns[Math.floor(Math.random() * game.patterns.length)];
-        const gap = 380 / speed;
+        const safetyGap = 400 / speed; // 물리적 돌파 가능 거리 계산
+        
         pattern.items.forEach((y, i) => {
             setTimeout(() => {
                 if(game.isLive && !game.fever) obs.push({ x: 950, y: y, s: speed });
-            }, i * (gap * 35));
+            }, i * (safetyGap * 40));
         });
     }
 
-    // 입력 처리 (PC & 모바일 통합)
+    // --- 입력 시스템 (PC/모바일 통합) ---
     const btn = document.getElementById('start-btn');
-    btn.onclick = (e) => { e.stopPropagation(); game.start(); };
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        game.start();
+    }, false);
 
-    function jumpTrigger(e) {
-        if (!game.isLive || e.target.id === 'speed-slider') return;
+    function handleAction(e) {
+        if (!game.isLive) return;
+        // 슬라이더나 버튼 클릭 시에는 점프 안 함
+        if (e.target.id === 'speed-slider' || e.target.id === 'start-btn') return;
+        
         if (p.jCount < 2) {
             p.dy = (p.jCount === 0) ? config.j1 : config.j2;
             p.jCount++;
         }
     }
-    window.addEventListener('mousedown', jumpTrigger);
+
+    // 마우스 클릭 (PC)
+    window.addEventListener('mousedown', handleAction);
+    // 터치 이벤트 (모바일) - Ghost click 방지
     window.addEventListener('touchstart', (e) => {
-        if(e.target.id !== 'speed-slider' && e.target.id !== 'start-btn') {
-            jumpTrigger(e);
-            if(e.cancelable) e.preventDefault();
-        }
-    }, {passive: false});
+        handleAction(e);
+        if(e.cancelable) e.preventDefault(); 
+    }, { passive: false });
 
     function update() {
         if(!game.isLive) return;
         
-        let curS = (config.baseSpeed + (game.score/1500)) * (game.fever ? 1.4 : 1);
+        let curS = (config.baseSpeed + (game.score/1200)) * (game.fever ? 1.4 : 1);
         syncAI(curS);
         
         game.score += curS / 15;
         p.dy += p.g; p.y += p.dy;
         
+        // 바닥 착지 판정
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
 
+        // 장애물 생성 타이머
         config.spawnTimer -= curS;
         if(config.spawnTimer <= 0 && !game.fever) {
-            spawnSmart(curS);
+            spawnAI(curS);
             config.spawnTimer = 220 + Math.random() * 200;
         }
 
+        // 에너지(코인) 생성
         if(Math.random() < 0.02) coins.push({ x: 950, y: 180 + Math.random() * 150 });
 
+        // 장애물 충돌 및 이동
         obs.forEach((o, i) => {
             o.x -= o.s;
-            let hitW = p.jCount === 2 ? 22 : 28; // 스마트 히트박스
-            if(!game.fever && Math.abs(p.x + 20 - (o.x + 17)) < hitW && Math.abs(p.y + 22 - (o.y + 22)) < 30) {
+            // 2단 점프 중일 때 히트박스 혜택 제공 (스마트 판정)
+            let boxW = p.jCount === 2 ? 22 : 28;
+            if(!game.fever && Math.abs(p.x + 20 - (o.x + 17)) < boxW && Math.abs(p.y + 22 - (o.y + 22)) < 30) {
                 game.over();
             }
             if(o.x < -100) obs.splice(i, 1);
         });
 
+        // 에너지 획득
         coins.forEach((c, i) => {
             c.x -= curS;
-            if(game.fever) { c.x += (p.x - c.x) * 0.2; c.y += (p.y - c.y) * 0.2; }
+            if(game.fever) { // 자석 효과
+                c.x += (p.x - c.x) * 0.2; 
+                c.y += (p.y - c.y) * 0.2; 
+            }
             if(Math.abs(p.x - c.x) < 50 && Math.abs(p.y - c.y) < 50) {
                 coins.splice(i, 1);
                 game.gauge = Math.min(100, game.gauge + 10);
@@ -179,34 +212,57 @@
             if(c.x < -100) coins.splice(i, 1);
         });
 
-        if(game.fever) { game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false; }
+        // 피버 모드 소모
+        if(game.fever) {
+            game.gauge -= 0.6;
+            if(game.gauge <= 0) game.fever = false;
+        }
 
+        // UI 갱신
         document.getElementById('score').innerText = Math.floor(game.score);
         document.getElementById('gauge-text').innerText = Math.floor(game.gauge) + "%";
         document.getElementById('fever-fill').style.width = game.gauge + "%";
     }
 
     function draw() {
-        ctx.fillStyle = COLORS.bg; ctx.fillRect(0,0,900,450);
+        // 배경 클리어
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, 900, 450);
         
-        // 바닥선
-        ctx.strokeStyle = game.fever ? COLORS.pink : '#222';
-        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
+        // 가이드라인 (바닥)
+        ctx.strokeStyle = game.fever ? '#ff0077' : '#1a1a2e';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 395);
+        ctx.lineTo(900, 395);
+        ctx.stroke();
 
-        // 플레이어
-        ctx.fillStyle = game.fever ? '#fff' : (p.jCount === 2 ? COLORS.gold : COLORS.blue);
+        // 플레이어 드로잉
+        ctx.fillStyle = game.fever ? '#ffffff' : (p.jCount === 2 ? '#ffcc00' : '#00f2ff');
         ctx.fillRect(p.x, p.y, 40, 45);
 
-        // 장애물
-        ctx.fillStyle = COLORS.pink;
-        obs.forEach(o => { ctx.fillRect(o.x, o.y, 35, 45); });
+        // 장애물 드로잉
+        ctx.fillStyle = '#ff0077';
+        obs.forEach(o => {
+            ctx.fillRect(o.x, o.y, 35, 45);
+        });
         
-        // 코인
-        ctx.fillStyle = COLORS.gold;
-        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
+        // 에너지 드로잉
+        ctx.fillStyle = '#ffcc00';
+        coins.forEach(c => {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+        });
     }
 
-    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    // 엔진 가동
     loop();
     </script>
 </body>
