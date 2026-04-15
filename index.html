@@ -9,125 +9,123 @@
 
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
-        
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
         
-        /* [핵심 패치] 어떤 기기에서도 잘리지 않는 동적 높이 설정 */
         body { 
-            height: 100vh; 
-            height: 100dvh; /* 최신 브라우저용 동적 높이 */
+            height: 100dvh; /* 기기 높이에 딱 맞춤 */
             background: #000; 
             overflow: hidden; 
             display: flex; 
             flex-direction: column; 
-            font-family: 'Pretendard', -apple-system, sans-serif; 
-            color: white; 
+            font-family: -apple-system, sans-serif;
         }
 
-        /* 게임 영역: 비율을 유지하며 남는 공간을 꽉 채움 */
-        #game-area { 
+        /* [핵심] 게임이 담기는 컨테이너 - 남는 공간을 모두 차지함 */
+        #game-wrapper { 
             flex: 1; 
-            position: relative; 
-            width: 100%; 
             display: flex; 
+            flex-direction: column;
             justify-content: center; 
             align-items: center; 
+            position: relative;
             background: var(--bg);
+            padding: 10px;
+        }
+
+        /* [핵심] 캔버스 가변 비율 조절 - 절대 화면을 넘지 않음 */
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px; /* PC 최대 크기 */
+            aspect-ratio: 2 / 1; /* 게임의 900:450 비율 강제 고정 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         canvas { 
-            max-width: 100%; 
-            max-height: 100%; 
-            object-fit: contain; /* 비율 유지하며 화면 안잘리게 고정 */
+            width: 100%; 
+            height: 100%; 
+            background: #000;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border: 1px solid #222;
         }
 
-        /* 랭킹 및 메뉴 레이어 */
+        /* 랭킹 및 메뉴 레이어 - 캔버스 크기에 딱 맞게 겹침 */
         .overlay { 
             position: absolute; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.92); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 100;
-            padding: 20px;
         }
 
-        #title { font-size: clamp(34px, 10vw, 52px); font-weight: 900; color: var(--gold); text-shadow: 0 0 25px var(--gold); margin-bottom: 15px; }
+        #title { font-size: clamp(24px, 6vw, 42px); font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 5px; }
         
-        /* 랭킹(High Score) 디자인 강화 */
-        .rank-board { margin-bottom: 25px; text-align: center; border: 2px solid rgba(255,204,0,0.3); padding: 15px 40px; border-radius: 20px; background: rgba(255,204,0,0.05); }
-        .rank-label { font-size: 13px; color: var(--gold); letter-spacing: 4px; margin-bottom: 5px; opacity: 0.8; }
-        .rank-value { font-size: clamp(30px, 8vw, 42px); font-weight: 900; color: #fff; }
+        .rank-box { margin-bottom: 15px; text-align: center; }
+        .rank-val { font-size: clamp(28px, 7vw, 40px); font-weight: 900; color: #fff; }
 
-        .config-box { 
-            background: rgba(255,255,255,0.08); 
-            padding: 20px; 
-            border-radius: 24px; 
-            width: 100%; 
-            max-width: 360px; 
-            margin-bottom: 25px; 
+        .settings { 
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; 
+            width: 80%; max-width: 320px; margin-bottom: 15px;
         }
-        .config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 14px; }
-        .val-tag { background: var(--gold); color: #000; padding: 2px 10px; border-radius: 6px; font-size: 13px; }
-        
-        .diff-selector { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
-        .diff-btn { background: #1a1a1a; border: 1px solid #333; color: #666; padding: 12px 0; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 15px; }
-        .diff-btn.active { background: var(--gold); border-color: var(--gold); color: #000; box-shadow: 0 0 15px rgba(255,204,0,0.5); }
+        .row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #aaa; }
+        .tag { background: var(--gold); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
 
-        input[type="range"] { width: 100%; height: 6px; accent-color: var(--gold); cursor: pointer; margin: 15px 0 20px; }
-        .start-trigger { background: var(--gold); color: #000; padding: clamp(15px, 4vw, 22px) 80px; font-size: 24px; font-weight: 900; border-radius: 100px; border: none; cursor: pointer; transition: 0.2s; }
-        .start-trigger:active { transform: scale(0.95); }
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 5px; }
+        .diff-btn { background: #222; border: 1px solid #444; color: #888; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .diff-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
-        /* 하단 바 및 광고 영역 최적화 */
-        #status-bar { height: 45px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; font-size: 13px; font-weight: 900; border-top: 1px solid #1a1a1a; }
-        #ad-container { 
-            height: 70px; 
-            background: #000; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            border-top: 1px solid #1a1a1a;
-            overflow: hidden;
+        input[type="range"] { width: 100%; accent-color: var(--gold); margin: 8px 0; }
+        .btn-start { background: var(--gold); color: #000; padding: 12px 50px; font-size: 20px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; }
+
+        /* 하단 점수바 */
+        #stat-bar { 
+            height: 40px; background: #000; display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 20px; font-size: 14px; font-weight: bold; color: white; border-top: 1px solid #222;
+        }
+
+        /* 광고 영역 고정 */
+        #ad-box { 
+            height: 60px; background: #000; display: flex; justify-content: center; align-items: center; 
+            border-top: 1px solid #222; overflow: hidden;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-area">
-        <canvas id="cvs"></canvas>
-        
-        <div id="ovl" class="overlay">
-            <div id="title">NEON RUNNER</div>
-            
-            <div class="rank-board">
-                <div class="rank-label">PERSONAL BEST</div>
-                <div id="best-score-display" class="rank-value">0</div>
-            </div>
-
-            <div class="config-box">
-                <div class="config-row"><span>ENGINE SPEED</span><span id="speed-label" class="val-tag">12</span></div>
-                <input type="range" id="speed-slider" min="1" max="24" value="12">
-                <div class="config-row"><span>LEVEL</span><span id="diff-tag" class="val-tag">2</span></div>
-                <div class="diff-selector" id="diff-btns">
-                    <button class="diff-btn" data-lv="1">1</button>
-                    <button class="diff-btn active" data-lv="2">2</button>
-                    <button class="diff-btn" data-lv="3">3</button>
-                    <button class="diff-btn" data-lv="4">4</button>
-                    <button class="diff-btn" data-lv="5">5</button>
+    <div id="game-wrapper">
+        <div id="canvas-container">
+            <canvas id="cvs"></canvas>
+            <div id="ovl" class="overlay">
+                <div id="title">NEON RUNNER</div>
+                <div class="rank-box">
+                    <div style="font-size:12px; color:var(--gold); letter-spacing:2px;">TOP SCORE</div>
+                    <div id="menu-best" class="rank-val">0</div>
                 </div>
+                <div class="settings">
+                    <div class="row"><span>SPEED</span><span id="sv" class="tag">12</span></div>
+                    <input type="range" id="ss" min="1" max="24" value="12">
+                    <div class="row"><span>LEVEL</span><span id="lv" class="tag">2</span></div>
+                    <div class="diff-grid" id="db">
+                        <button class="diff-btn" data-l="1">1</button>
+                        <button class="diff-btn active" data-l="2">2</button>
+                        <button class="diff-btn" data-l="3">3</button>
+                        <button class="diff-btn" data-l="4">4</button>
+                        <button class="diff-btn" data-l="5">5</button>
+                    </div>
+                </div>
+                <button class="btn-start" id="sb">START</button>
             </div>
-            <button class="start-trigger" id="game-start">GAME START</button>
         </div>
     </div>
 
-    <div id="status-bar">
-        <div id="cur-score">SCORE: 0</div>
-        <div id="best-score" style="color:var(--gold);">BEST: 0</div>
+    <div id="stat-bar">
+        <div id="st">SCORE: 0</div>
+        <div id="bt" style="color:var(--gold);">BEST: 0</div>
     </div>
 
-    <div id="ad-container">
+    <div id="ad-box">
         <ins class="adsbygoogle"
              style="display:block; width:320px; height:50px"
              data-ad-client="ca-pub-7503206245117361"
@@ -142,131 +140,112 @@
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         cvs.width = 900; cvs.height = 450;
         
-        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('game-start');
-        const sRange = document.getElementById('speed-slider'), sVal = document.getElementById('speed-label');
-        const diffBtns = document.querySelectorAll('.diff-btn'), diffTag = document.getElementById('diff-tag');
-        const bestRank = document.getElementById('best-score-display');
+        const ovl = document.getElementById('ovl'), sb = document.getElementById('sb');
+        const ss = document.getElementById('ss'), sv = document.getElementById('sv');
+        const db = document.querySelectorAll('.diff-btn'), lv = document.getElementById('lv');
+        const mb = document.getElementById('menu-best');
 
-        let isLive = false, score = 0, currentLv = 2;
+        let live = false, score = 0, diff = 2;
         let p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
         let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 2.6 };
 
-        const lvMap = {
-            1: { sm: 0.8, spm: 1.3, g: 2.4 },
-            2: { sm: 1.0, spm: 1.0, g: 2.6 },
-            3: { sm: 1.3, spm: 0.8, g: 2.8 },
-            4: { sm: 1.6, spm: 0.7, g: 3.0 },
-            5: { sm: 2.0, spm: 0.5, g: 3.2 }
+        const lvSet = {
+            1: { sm: 0.8, g: 2.4 }, 2: { sm: 1.0, g: 2.6 }, 3: { sm: 1.3, g: 2.8 },
+            4: { sm: 1.6, g: 3.0 }, 5: { sm: 2.0, g: 3.2 }
         };
 
-        const loadRank = () => {
-            const best = Math.floor(localStorage.getItem('nr_best_v2') || 0);
-            bestRank.innerText = best;
-            document.getElementById('best-score').innerText = "BEST: " + best;
+        const updateRecord = () => {
+            const b = Math.floor(localStorage.getItem('nr_best_v3') || 0);
+            mb.innerText = b;
+            document.getElementById('bt').innerText = "BEST: " + b;
         };
-        loadRank();
+        updateRecord();
 
-        sRange.oninput = () => { sVal.innerText = sRange.value; };
-        diffBtns.forEach(b => {
+        ss.oninput = () => { sv.innerText = ss.value; };
+        db.forEach(b => {
             b.onclick = () => {
-                diffBtns.forEach(x => x.classList.remove('active'));
+                db.forEach(x => x.classList.remove('active'));
                 b.classList.add('active');
-                currentLv = parseInt(b.dataset.lv);
-                diffTag.innerText = currentLv;
+                diff = parseInt(b.dataset.l);
+                lv.innerText = diff;
             };
         });
 
-        const jump = (e) => {
-            if(!isLive || e.target.closest('.config-box') || e.target === startBtn) return;
+        const doJump = (e) => {
+            if(!live || e.target.closest('.settings') || e.target === sb) return;
             if(p.jc < 2) {
-                const s = (cfg.spd + (score/2000)) * 0.1;
-                p.dy = (p.jc === 0) ? -(24 + s) : -(18 + s);
+                p.dy = (p.jc === 0) ? -25 : -20;
                 p.jc++;
             }
         };
 
-        window.addEventListener('touchstart', (e) => { if(isLive) e.preventDefault(); jump(e); }, { passive: false });
-        window.addEventListener('mousedown', jump);
+        window.addEventListener('touchstart', (e) => { if(live) e.preventDefault(); doJump(e); }, { passive: false });
+        window.addEventListener('mousedown', doJump);
         
-        startBtn.onclick = () => {
-            const l = lvMap[currentLv];
-            cfg.spd = parseInt(sRange.value) * l.sm;
+        sb.onclick = () => {
+            const l = lvSet[diff];
+            cfg.spd = parseInt(ss.value) * l.sm;
             cfg.grav = l.g;
             p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
-            obs = []; items = []; score = 0; isLive = true;
+            obs = []; items = []; score = 0; live = true;
             ovl.style.display = 'none';
         };
 
-        function drawHeart(x, y, sz, col, empty) {
-            ctx.save(); ctx.translate(x, y); ctx.beginPath(); ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(-sz/2, -sz/2, -sz, sz/4, 0, sz);
-            ctx.bezierCurveTo(sz, sz/4, sz/2, -sz/2, 0, 0);
-            ctx.fillStyle = empty ? "#222" : col;
-            if(!empty) { ctx.shadowBlur = 10; ctx.shadowColor = col; }
-            ctx.fill(); ctx.restore();
+        function drawHeart(x, y, s, c, e) {
+            ctx.save(); ctx.translate(x, y); ctx.beginPath();
+            ctx.bezierCurveTo(-s/2,-s/2,-s,s/4,0,s); ctx.bezierCurveTo(s,s/4,s/2,-s/2,0,0);
+            ctx.fillStyle = e ? "#222" : c; ctx.fill(); ctx.restore();
         }
 
-        function loop() {
-            if(isLive) {
-                const l = lvMap[currentLv];
+        function engine() {
+            if(live) {
                 let s = cfg.spd + (score/2000);
                 p.dy += cfg.grav; p.y += p.dy;
                 if(p.y > 350) { p.y = 350; p.dy = 0; p.jc = 0; }
                 if(p.inv > 0) p.inv--;
-                score += (s/10) * currentLv;
-                cfg.timer -= s;
+                score += s/10; cfg.timer -= s;
 
                 if(cfg.timer <= 0) {
-                    if(Math.random() < 0.3) {
-                        for(let i=0; i<2; i++) obs.push({ x: 950 + (i * 280), y: 375, w: 22, h: 22, s: s });
-                    } else {
-                        obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
-                    }
-                    if(Math.random() < 0.15) items.push({ x: 1050, y: 220, type: 'h' });
-                    cfg.timer = (480 + Math.random() * 320) * (12/s) * l.spm;
+                    obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
+                    if(Math.random() < 0.1) items.push({ x: 1050, y: 220 });
+                    cfg.timer = (400 + Math.random() * 400) * (15/s);
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
-                    if(p.inv <= 0 && p.x + 5 < o.x + o.w && p.x + 35 > o.x && p.y + 40 > o.y) {
+                    if(p.inv <= 0 && p.x < o.x + o.w && p.x + 35 > o.x && p.y + 40 > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) {
-                            isLive = false;
-                            const best = localStorage.getItem('nr_best_v2') || 0;
-                            if(score > best) localStorage.setItem('nr_best_v2', score);
-                            loadRank();
-                            ovl.style.display = 'flex';
+                            live = false;
+                            const b = localStorage.getItem('nr_best_v3') || 0;
+                            if(score > b) localStorage.setItem('nr_best_v3', score);
+                            updateRecord(); ovl.style.display = 'flex';
                         }
                     }
-                    if(o.x < -100) obs.splice(i, 1);
+                    if(o.x < -50) obs.splice(i, 1);
                 });
                 items.forEach((it, i) => {
                     it.x -= s;
-                    if(Math.abs(p.x - it.x) < 45 && Math.abs(p.y - it.y) < 60) {
+                    if(Math.abs(p.x - it.x) < 40 && Math.abs(p.y - it.y) < 60) {
                         if(p.hp < 3) p.hp++;
                         items.splice(i, 1);
                     }
                 });
-                document.getElementById('cur-score').innerText = "SCORE: " + Math.floor(score);
+                document.getElementById('st').innerText = "SCORE: " + Math.floor(score);
             }
 
-            // Draw
-            ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
-            ctx.strokeStyle = "#222"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 397); ctx.lineTo(900, 397); ctx.stroke();
-            for(let i=0; i<3; i++) drawHeart(55 + (i*42), 55, 18, "#ffcc00", i >= p.hp);
+            ctx.fillStyle = "#050508"; ctx.fillRect(0,0,900,450);
+            ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 397, 900, 2);
+            for(let i=0; i<3; i++) drawHeart(50+(i*35), 50, 15, "#ffcc00", i>=p.hp);
             if(p.inv % 10 < 5) {
-                ctx.fillStyle = p.jc === 2 ? "#ffcc00" : "#00f2ff";
-                ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
-                ctx.fillRect(p.x, p.y, 40, 45); ctx.shadowBlur = 0;
+                ctx.fillStyle = p.jc === 2 ? var(--gold) : "#00f2ff";
+                ctx.fillRect(p.x, p.y, 40, 45);
             }
-            ctx.fillStyle = "#ff0077"; ctx.shadowBlur = 10; ctx.shadowColor = "#ff0077";
-            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-            ctx.shadowBlur = 0;
-            items.forEach(it => drawHeart(it.x, it.y, 16, "#ffcc00"));
-            
-            requestAnimationFrame(loop);
+            ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+            items.forEach(it => drawHeart(it.x, it.y, 15, "#ffcc00", false));
+            requestAnimationFrame(engine);
         }
-        loop();
+        engine();
     };
     </script>
 </body>
