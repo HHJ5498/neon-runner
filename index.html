@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner</title>
+    <title>Neon Runner : 동체시력키우기</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
@@ -14,12 +14,10 @@
         html, body { 
             height: 100%; width: 100%; 
             background: #000; overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            color: white; 
+            font-family: sans-serif; color: white; 
         }
         body { display: flex; flex-direction: column; }
 
-        /* 게임 영역: 캔버스가 잘리지 않도록 45vh로 제한 */
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-start;
             background: var(--bg); padding: 10px; overflow: hidden;
@@ -27,68 +25,42 @@
 
         #canvas-box {
             position: relative; width: 100%; max-width: 600px; 
-            max-height: 45vh; 
-            aspect-ratio: 2 / 1;
-            margin-top: 10px;
+            max-height: 45vh; aspect-ratio: 2 / 1; margin-top: 20px;
         }
 
         canvas { 
             width: 100%; height: 100%; background: #000; 
             border: 2px solid #333; display: block; border-radius: 12px; 
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
         }
 
-        /* 오버레이 메뉴 */
         #ovl {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95);
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; padding: 15px; border-radius: 12px;
+            z-index: 1000; padding: 20px; border-radius: 12px;
         }
 
         #title { 
-            font-size: 28px; font-weight: 900; color: var(--gold); 
-            margin-bottom: 15px; letter-spacing: 3px;
-            text-shadow: 0 0 15px var(--gold);
+            font-size: 26px; font-weight: 900; color: var(--gold); 
+            margin-bottom: 5px; letter-spacing: 1px; text-shadow: 0 0 15px var(--gold);
+            text-align: center;
         }
-
-        .controls {
-            width: 100%; max-width: 280px; background: rgba(255, 255, 255, 0.07);
-            padding: 15px; border-radius: 15px; margin-bottom: 15px;
-        }
-        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-bottom: 8px; }
-        .badge { background: var(--gold); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .diff-btn { 
-            background: #222; border: 1px solid #444; color: #888; padding: 12px 0;
-            border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold;
-            transition: 0.2s;
-        }
-        .diff-btn.active { 
-            background: var(--gold); color: #000; border-color: var(--gold); 
-            box-shadow: 0 0 10px var(--gold);
-        }
+        #sub-title { font-size: 14px; color: var(--neon); margin-bottom: 25px; font-weight: bold; }
 
         .btn-start { 
-            background: var(--gold); color: #000; padding: 16px 60px; 
-            font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.3);
+            background: var(--gold); color: #000; padding: 18px 70px; 
+            font-size: 24px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.4);
         }
 
-        /* 하단 정보바 */
         #stat-bar { 
-            height: 45px; background: #111; display: flex; 
+            height: 50px; background: #111; display: flex; 
             justify-content: space-between; align-items: center; 
-            padding: 0 25px; font-size: 14px; font-weight: bold; 
-            border-top: 1px solid #222; 
+            padding: 0 30px; font-size: 14px; font-weight: bold; border-top: 1px solid #222; 
         }
         
-        /* 광고 박스 */
-        #ad-box { 
-            height: 75px; background: #000; 
-            display: flex; justify-content: center; align-items: center; 
-            border-top: 1px solid #222; 
-        }
+        #ad-box { height: 75px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        
+        .ai-stat { font-size: 11px; color: #666; font-family: monospace; }
     </style>
 </head>
 <body oncontextmenu="return false;" ondragstart="return false;">
@@ -96,28 +68,17 @@
     <div id="game-area">
         <div id="canvas-box">
             <canvas id="cvs"></canvas>
-            
             <div id="ovl">
-                <div id="title">NEON RUNNER</div>
-                
-                <div class="controls">
-                    <div class="label-row"><span>DIFFICULTY (INTERVALS)</span><span id="d-val" class="badge">2</span></div>
-                    <div class="diff-grid">
-                        <button class="diff-btn" data-v="1">1</button>
-                        <button class="diff-btn active" data-v="2">2</button>
-                        <button class="diff-btn" data-v="3">3</button>
-                        <button class="diff-btn" data-v="4">4</button>
-                        <button class="diff-btn" data-v="5">5</button>
-                    </div>
-                </div>
-                
-                <button class="btn-start" id="start-btn">START TRAIN</button>
+                <div id="title">Neon Runner : 동체시력키우기</div>
+                <div id="sub-title">AI ADAPTIVE PHYSICS ENGINE</div>
+                <button class="btn-start" id="start-btn">START</button>
             </div>
         </div>
     </div>
 
     <div id="stat-bar">
         <div id="now-score">SCORE: 0</div>
+        <div class="ai-stat" id="ai-log">GRAVITY: 3.2 | SPEED: 10.0</div>
         <div id="top-score" style="color:var(--gold);">TOP: 0</div>
     </div>
 
@@ -133,64 +94,37 @@
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         cvs.width = 900; cvs.height = 450;
+        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn'), aiLog = document.getElementById('ai-log');
 
-        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
-        const dBtn = document.querySelectorAll('.diff-btn');
-
-        let isLive = false, score = 0, curLv = 2;
+        let isLive = false, score = 0;
         let p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
-        let obs = [], cfg = { spd: 12, nextDist: 0, grav: 3.4, gap: 550 }; 
-
-        // [물리 설정] PC/모바일 통합 가변 점프 (꾹 누르면 세짐)
-        const JUMP_PARAMS = { baseForce: -21, holdForce: -4.0, maxHoldTime: 18 };
-
-        // [난이도 설정] 일정 간격(gap) 장애물 생성 로직
-        const lvSettings = {
-            1: { spd: 9,  gap: 820, grav: 3.0 },
-            2: { spd: 13, gap: 580, grav: 3.4 },
-            3: { spd: 17, gap: 420, grav: 3.8 },
-            4: { spd: 21, gap: 320, grav: 4.2 },
-            5: { spd: 25, gap: 260, grav: 4.7 }
-        };
+        let obs = [], cfg = { spd: 10, nextDist: 0, grav: 3.2, gap: 650, jumpForce: -20, holdForce: -3.8 }; 
 
         const syncTop = () => {
-            let top = localStorage.getItem('neon_runner_top') || 0;
+            let top = localStorage.getItem('neon_runner_ai_top') || 0;
             document.getElementById('top-score').innerText = "TOP: " + Math.floor(top);
         };
         const saveTop = (s) => {
-            let top = localStorage.getItem('neon_runner_top') || 0;
-            if(s > top) localStorage.setItem('neon_runner_top', s);
+            let top = localStorage.getItem('neon_runner_ai_top') || 0;
+            if(s > top) localStorage.setItem('neon_runner_ai_top', s);
             syncTop();
         };
         syncTop();
 
-        dBtn.forEach(b => {
-            b.onclick = (e) => {
-                e.stopPropagation();
-                dBtn.forEach(x => x.classList.remove('active'));
-                b.classList.add('active');
-                curLv = parseInt(b.dataset.v);
-                document.getElementById('d-val').innerText = curLv;
-            };
-        });
-
         startBtn.onclick = function(e) {
             e.stopPropagation();
-            const s = lvSettings[curLv];
-            cfg.spd = s.spd; cfg.gap = s.gap; cfg.grav = s.grav;
+            cfg = { spd: 10, nextDist: 0, grav: 3.2, gap: 650, jumpForce: -20, holdForce: -3.8 };
             p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
-            obs = []; score = 0; isLive = true; cfg.nextDist = 0;
+            obs = []; score = 0; isLive = true;
             ovl.style.display = 'none';
         };
 
-        // 점프 이벤트 (PointerEvent로 통합)
         const startJump = (e) => {
-            if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
+            if(!isLive || e.target === startBtn) return;
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             if (e.pointerType === 'touch') e.preventDefault();
-
             if(p.jc < 2) {
-                p.dy = (p.jc === 0) ? JUMP_PARAMS.baseForce : JUMP_PARAMS.baseForce * 0.95;
+                p.dy = (p.jc === 0) ? cfg.jumpForce : cfg.jumpForce * 0.9;
                 p.jc++; p.isJumping = true; p.jumpTime = 0;
             }
         };
@@ -198,34 +132,37 @@
 
         window.addEventListener('pointerdown', startJump, { passive: false });
         window.addEventListener('pointerup', endJump);
-        window.addEventListener('pointercancel', endJump);
 
         function loop() {
             if(isLive) {
-                let currentSpd = cfg.spd + (score / 1200);
+                // AI 물리 엔진 적용
+                cfg.spd += 0.0018; 
+                cfg.grav = 3.2 + (score / 1500);
+                cfg.jumpForce = -20 - (cfg.grav - 3.2) * 1.5;
+                cfg.holdForce = -3.8 - (cfg.grav - 3.2) * 0.4;
+                cfg.gap = Math.max(270, 680 - (cfg.spd - 10) * 28);
+                
+                aiLog.innerText = `GRAVITY: ${cfg.grav.toFixed(2)} | SPEED: ${cfg.spd.toFixed(1)} | JUMP: ${Math.abs(cfg.jumpForce).toFixed(1)}`;
 
-                // 가변 점프 로직
-                if (p.isJumping && p.jumpTime < JUMP_PARAMS.maxHoldTime) {
-                    p.dy += JUMP_PARAMS.holdForce; p.jumpTime++;
+                if (p.isJumping && p.jumpTime < 18) {
+                    p.dy += cfg.holdForce; p.jumpTime++;
                 } else { p.isJumping = false; }
 
                 p.dy += cfg.grav; p.y += p.dy;
-
                 if(p.y >= 350) { p.y = 350; p.dy = 0; p.jc = 0; p.isJumping = false; }
                 
                 if(p.inv > 0) p.inv--;
-                score += currentSpd / 12;
-                cfg.nextDist -= currentSpd;
+                score += cfg.spd / 12;
+                cfg.nextDist -= cfg.spd;
 
-                // [핵심] 일정한 간격 생성
                 if(cfg.nextDist <= 0) {
-                    let h = Math.random() > 0.45 ? 35 : 75; 
-                    obs.push({ x: 950, y: 400-h, w: 32, h: h, s: currentSpd });
+                    let h = Math.random() > 0.65 ? 35 : 75; 
+                    obs.push({ x: 950, y: 400-h, w: 32, h: h });
                     cfg.nextDist = cfg.gap; 
                 }
 
                 obs.forEach((o, i) => {
-                    o.x -= o.s;
+                    o.x -= cfg.spd;
                     if(p.inv <= 0 && p.x+15 < o.x+o.w && p.x+25 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) { isLive = false; saveTop(score); ovl.style.display = 'flex'; }
@@ -235,19 +172,15 @@
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
 
-            // 그리기
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
             ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 400, 900, 1);
             
-            // 체력 (하트 대신 깔끔한 사각형)
-            ctx.fillStyle = p.hp > 1 ? "#ffcc00" : "#ff0077";
+            ctx.fillStyle = "#ffcc00";
             for(let i=0; i<p.hp; i++) ctx.fillRect(40+(i*25), 40, 15, 15);
             
-            // 캐릭터 (2단 점프 피드백 포함)
             ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0,242,255,0.2)");
             ctx.fillRect(p.x, p.y, 40, 50);
             
-            // 장애물
             ctx.fillStyle = "#ff0077"; 
             obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
             
