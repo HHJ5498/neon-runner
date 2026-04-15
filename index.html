@@ -86,20 +86,20 @@
             h: 60 
         };
 
-        // [난이도 조정] 시작 속도를 낮추고(8~10), 가속도를 세밀하게 설정
+        // [물리 수치 상향] 점프는 더 높게, 중력은 더 무겁게
         cfg = { 
-            spd: isMobile ? 8 : 10,  // 시작 속도 하향 (여유 있는 시작)
+            spd: isMobile ? 8 : 10,  
             baseSpd: isMobile ? 8 : 10,
-            grav: isMobile ? 3.8 : 4.2, 
-            jump: isMobile ? -52 : -55, 
+            grav: isMobile ? 4.5 : 4.8, // 하강 속도 대폭 상향
+            jump: isMobile ? -62 : -65, // 점프 높이 대폭 상향 (천장 돌파 수준)
             next: 0, 
-            gap: isMobile ? 700 : 900 // 초기 간격을 넓혀서 쉽게 시작
+            gap: isMobile ? 750 : 950 
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_vFinal_v2') || "[]");
+        const ranks = JSON.parse(localStorage.getItem('neon_vMaxJump') || "[]");
         const list = document.querySelector('#ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
@@ -128,12 +128,16 @@
     function loop() {
         const gY = cvs.height - 100;
         if(isLive) {
-            // [난이도 로직] 시간에 따라 아주 천천히 가속 (0.002 -> 0.0018)
             cfg.spd += 0.0018; 
             p.dy += cfg.grav; 
             p.y += p.dy;
 
-            if(p.y < 0) { p.y = 0; p.dy = 0; }
+            // 천장 충돌 시 튕겨 내려오는 느낌 부여
+            if(p.y < 0) { 
+                p.y = 0; 
+                p.dy = 2; // 천장을 치면 살짝 아래로 밀어줌
+            }
+
             if(p.y >= gY - p.h) { 
                 p.y = gY - p.h; 
                 p.dy = 0; 
@@ -146,8 +150,6 @@
             if(cfg.next <= 0) {
                 let h = Math.random() > 0.7 ? 40 : 80; 
                 obs.push({ x: cvs.width + 100, y: gY - h, w: 35, h: h });
-                
-                // [난이도 로직] 속도가 빨라질수록 장애물 생성 간격을 유동적으로 조절
                 let currentGap = cfg.gap * (cfg.baseSpd / cfg.spd);
                 cfg.next = (Math.max(currentGap, 400) + Math.random() * 300);
             }
@@ -158,9 +160,9 @@
                     p.hp--; p.inv = 60;
                     if(p.hp <= 0) {
                         isLive = false;
-                        let r = JSON.parse(localStorage.getItem('neon_vFinal_v2') || "[]");
+                        let r = JSON.parse(localStorage.getItem('neon_vMaxJump') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_vFinal_v2', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_vMaxJump', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
