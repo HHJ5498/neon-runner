@@ -13,60 +13,61 @@
         html, body { height: 100dvh; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
         body { display: flex; flex-direction: column; }
 
-        /* 게임 영역: 비율 유지 및 중앙 정렬 */
+        /* [수정] 게임 영역: 상하 여백 확보로 버튼 잘림 방지 */
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
-            background: var(--bg); padding: 5px; overflow: hidden;
+            background: var(--bg); padding: 20px 10px; overflow: hidden;
         }
 
         #canvas-box {
-            position: relative; width: 100%; max-width: 900px; aspect-ratio: 2 / 1;
+            position: relative; width: 100%; max-width: 900px; 
+            max-height: 70vh; /* 화면의 70%까지만 차지하도록 제한해서 버튼 공간 확보 */
+            aspect-ratio: 2 / 1;
             display: flex; justify-content: center; align-items: center;
         }
 
-        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #222; display: block; }
+        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #222; display: block; border-radius: 8px; }
 
-        /* 메뉴 레이어 */
+        /* 메뉴 레이어: 요소 간 간격 최적화 */
         #ovl {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95);
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.96);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; padding: 10px;
+            z-index: 1000; padding: 15px;
         }
 
-        #title { font-size: clamp(22px, 5vw, 36px); font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 10px; }
+        #title { font-size: clamp(20px, 5vw, 32px); font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 8px; }
 
-        /* 랭킹판 */
         .rank-list {
-            width: 100%; max-width: 260px; background: rgba(255,255,255,0.05);
-            border-radius: 12px; padding: 8px; margin-bottom: 12px; border: 1px solid rgba(255,204,0,0.2);
+            width: 100%; max-width: 240px; background: rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 8px; margin-bottom: 10px; border: 1px solid rgba(255,204,0,0.2);
         }
-        .rank-row { display: flex; justify-content: space-between; padding: 3px 10px; font-size: 13px; color: #ccc; }
+        .rank-row { display: flex; justify-content: space-between; padding: 2px 10px; font-size: 12px; color: #ccc; }
         .rank-row.top { color: var(--gold); font-weight: bold; }
 
-        /* 컨트롤 박스 (클릭 허용 중요) */
         .controls {
-            width: 90%; max-width: 320px; background: rgba(255,255,255,0.03);
-            padding: 12px; border-radius: 15px; margin-bottom: 15px; pointer-events: auto;
+            width: 100%; max-width: 300px; background: rgba(255,255,255,0.03);
+            padding: 10px; border-radius: 12px; margin-bottom: 12px; pointer-events: auto;
         }
-        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
-        .badge { background: var(--gold); color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; margin-bottom: 4px; }
+        .badge { background: var(--gold); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
 
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 5px; }
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 4px; }
         .diff-btn { 
-            background: #222; border: 1px solid #444; color: #888; padding: 8px 0;
-            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px;
+            background: #222; border: 1px solid #444; color: #888; padding: 6px 0;
+            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
         }
         .diff-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
-        input[type="range"] { width: 100%; height: 6px; accent-color: var(--gold); margin: 10px 0 15px; cursor: pointer; }
+        input[type="range"] { width: 100%; height: 5px; accent-color: var(--gold); margin: 8px 0 12px; cursor: pointer; }
 
+        /* [수정] 스타트 버튼 크기 및 여백 조정 */
         .btn-start { 
-            background: var(--gold); color: #000; padding: 14px 70px; 
-            font-size: 20px; font-weight: 900; border-radius: 50px; 
-            border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(255,204,0,0.3);
+            background: var(--gold); color: #000; padding: 12px 60px; 
+            font-size: 18px; font-weight: 900; border-radius: 50px; 
+            border: none; cursor: pointer; transition: 0.2s;
         }
+        .btn-start:active { transform: scale(0.95); }
 
-        /* 정보바 및 광고 */
         #stat-bar { height: 40px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; font-weight: bold; font-size: 13px; }
         #ad-box { height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
@@ -88,11 +89,10 @@
                     <div class="rank-row"><span>5TH</span><span id="r5">0</span></div>
                 </div>
 
-                <div class="controls" id="ctrl-box">
-                    <div class="label-row"><span>ENGINE SPEED</span><span id="s-val" class="badge">12</span></div>
+                <div class="controls">
+                    <div class="label-row"><span>SPEED</span><span id="s-val" class="badge">12</span></div>
                     <input type="range" id="s-input" min="1" max="24" value="12">
-                    
-                    <div class="label-row"><span>DIFFICULTY (LV)</span><span id="d-val" class="badge">2</span></div>
+                    <div class="label-row"><span>DIFFICULTY</span><span id="d-val" class="badge">2</span></div>
                     <div class="diff-grid">
                         <button class="diff-btn" data-v="1">1</button>
                         <button class="diff-btn active" data-v="2">2</button>
@@ -102,7 +102,7 @@
                     </div>
                 </div>
                 
-                <button class="btn-start" id="start-btn">START</button>
+                <button class="btn-start" id="start-btn">GAME START</button>
             </div>
         </div>
     </div>
@@ -132,46 +132,41 @@
         const dBtn = document.querySelectorAll('.diff-btn'), dVal = document.getElementById('d-val');
 
         let isLive = false, score = 0, curLv = 2;
+        // [수정] 점프 및 중력 밸런스 조정: 고점프(-28) & 강한 중력(3.2)
         let p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
-        let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 2.6 };
+        let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 3.2 };
 
         const lvSet = {
-            1: { sm: 0.8, g: 2.4 }, 2: { sm: 1.0, g: 2.6 }, 3: { sm: 1.3, g: 2.8 },
-            4: { sm: 1.6, g: 3.0 }, 5: { sm: 2.0, g: 3.2 }
+            1: { sm: 0.8, g: 3.0 }, 2: { sm: 1.0, g: 3.2 }, 3: { sm: 1.3, g: 3.5 },
+            4: { sm: 1.6, g: 3.8 }, 5: { sm: 2.0, g: 4.2 }
         };
 
-        // --- 랭킹 시스템 ---
         const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_top5_final') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal') || "[0,0,0,0,0]");
             rs.forEach((v, i) => { document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
             document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
         };
         const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_top5_final') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal') || "[0,0,0,0,0]");
             rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_top5_final', JSON.stringify(rs.slice(0,5)));
+            localStorage.setItem('nr_top5_vFinal', JSON.stringify(rs.slice(0,5)));
             syncRanks();
         };
         syncRanks();
 
-        // --- [수정] 컨트롤 이벤트 (이벤트 전파 방지 및 즉각 업데이트) ---
-        sInput.addEventListener('input', (e) => {
-            sVal.innerText = sInput.value;
-        });
-
+        sInput.oninput = () => { sVal.innerText = sInput.value; };
         dBtn.forEach(b => {
-            b.addEventListener('click', (e) => {
-                e.preventDefault(); e.stopPropagation();
+            b.onclick = (e) => {
+                e.stopPropagation();
                 dBtn.forEach(x => x.classList.remove('active'));
                 b.classList.add('active');
                 curLv = parseInt(b.dataset.v);
                 dVal.innerText = curLv;
-            });
+            };
         });
 
-        // --- [수정] 시작 버튼 (가장 확실한 클릭 이벤트) ---
         startBtn.onclick = function(e) {
-            e.preventDefault(); e.stopPropagation();
+            e.stopPropagation();
             const set = lvSet[curLv];
             cfg.spd = parseInt(sInput.value) * set.sm;
             cfg.grav = set.g;
@@ -180,19 +175,16 @@
             ovl.style.display = 'none';
         };
 
-        // --- 조작 (메뉴 영역 제외하고 작동) ---
+        // [핵심] 2단 점프 및 파워 점프 로직
         const jump = (e) => {
-            if(!isLive) return;
-            // 메뉴나 컨트롤 클릭 시 점프 안되게 보호
-            if(e.target.closest('#ovl')) return;
-            
+            if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
             if(p.jc < 2) {
-                p.dy = (p.jc === 0) ? -24 : -19;
+                // 첫 점프는 높게, 2단 점프는 조금 낮게 추진력 조절
+                p.dy = (p.jc === 0) ? -28 : -22; 
                 p.jc++;
             }
         };
 
-        // 모바일/PC 통합 리스너
         window.addEventListener('mousedown', jump);
         window.addEventListener('touchstart', (e) => {
             if(isLive && !e.target.closest('#ovl')) e.preventDefault();
@@ -215,7 +207,7 @@
 
                 if(cfg.timer <= 0) {
                     obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
-                    if(Math.random() < 0.1) items.push({ x: 1050, y: 220 });
+                    if(Math.random() < 0.12) items.push({ x: 1050, y: 200 });
                     cfg.timer = (400 + Math.random() * 400) * (15/s);
                 }
 
@@ -229,7 +221,7 @@
                 });
                 items.forEach((it, i) => {
                     it.x -= s;
-                    if(Math.abs(p.x - it.x) < 40 && Math.abs(p.y - it.y) < 60) {
+                    if(Math.abs(p.x - it.x) < 40 && Math.abs(p.y - it.y) < 70) {
                         if(p.hp < 3) p.hp++;
                         items.splice(i, 1);
                     }
@@ -240,10 +232,11 @@
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
             ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 397, 900, 2);
             for(let i=0; i<3; i++) drawHeart(50+(i*35), 50, 15, "#ffcc00", i >= p.hp);
-            if(p.inv % 10 < 5) {
-                ctx.fillStyle = p.jc === 2 ? "#ffcc00" : "#00f2ff";
-                ctx.fillRect(p.x, p.y, 40, 45);
-            }
+            
+            // 캐릭터 출력 (2단 점프 시 황금색으로 변신)
+            ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "transparent");
+            ctx.fillRect(p.x, p.y, 40, 45);
+            
             ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
             items.forEach(it => drawHeart(it.x, it.y, 15, "#ffcc00", false));
             requestAnimationFrame(loop);
