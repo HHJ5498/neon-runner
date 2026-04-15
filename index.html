@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Runner : 동체시력훈련</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
@@ -54,9 +55,13 @@
     </div>
 
     <div id="ad-box">
-        <ins class="adsbygoogle" style="display:block; width:320px; height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9285335402"></ins>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        <ins class="adsbygoogle"
+             style="display:block; width:320px; height:50px"
+             data-ad-client="ca-pub-7503206245117361"
+             data-ad-slot="9285335402"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
     </div>
 
     <script>
@@ -86,15 +91,15 @@
             spd: isMobile ? 8 : 10,  
             baseSpd: isMobile ? 8 : 10,
             grav: isMobile ? 3.5 : 4.0, 
-            jumpForce: isMobile ? -22 : -25, // 기본 점프 힘
-            maxJump: isMobile ? -55 : -60,  // 꾹 눌렀을 때 최대 속도
+            jumpForce: isMobile ? -22 : -25, 
+            maxJump: isMobile ? -55 : -60,  
             next: 0, gap: isMobile ? 750 : 950 
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_vFlexJump') || "[]");
+        const ranks = JSON.parse(localStorage.getItem('neon_vFinalAd') || "[]");
         const list = document.querySelector('#ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
@@ -111,7 +116,6 @@
         ovl.style.display = 'none';
     };
 
-    // [핵심 수정] 누르고 있는 동안 상승하는 로직
     const startJump = (e) => {
         if(!isLive || e.target === startBtn) return;
         isPressing = true;
@@ -131,9 +135,9 @@
         if(isLive) {
             cfg.spd += 0.0018; 
             
-            // [가변 점프 물리] 누르고 있으면 위로 더 힘을 받음 (최대치까지)
+            // 가변 점프 로직: 누르고 있으면 추가 상승
             if(isPressing && p.dy < 0) {
-                p.dy += cfg.jumpForce * 0.15; // 누르는 동안 가속도 추가
+                p.dy += cfg.jumpForce * 0.15;
                 if(p.dy < cfg.maxJump) p.dy = cfg.maxJump;
             }
 
@@ -164,9 +168,9 @@
                     if(p.hp <= 0) {
                         isLive = false;
                         isPressing = false;
-                        let r = JSON.parse(localStorage.getItem('neon_vFlexJump') || "[]");
+                        let r = JSON.parse(localStorage.getItem('neon_vFinalAd') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_vFlexJump', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_vFinalAd', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
