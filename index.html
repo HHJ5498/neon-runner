@@ -86,20 +86,21 @@
             h: 60 
         };
 
-        // 점프는 더 높게, 중력은 더 강하게 (장애물 간격은 유지)
+        // [난이도 조정] 시작 속도를 낮추고(8~10), 가속도를 세밀하게 설정
         cfg = { 
-            spd: isMobile ? 13 : 16, 
+            spd: isMobile ? 8 : 10,  // 시작 속도 하향 (여유 있는 시작)
+            baseSpd: isMobile ? 8 : 10,
             grav: isMobile ? 3.8 : 4.2, 
             jump: isMobile ? -52 : -55, 
             next: 0, 
-            gap: isMobile ? 600 : 800 
+            gap: isMobile ? 700 : 900 // 초기 간격을 넓혀서 쉽게 시작
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_vFinal') || "[]");
-        const list = document.getElementById('ranking-box');
+        const ranks = JSON.parse(localStorage.getItem('neon_vFinal_v2') || "[]");
+        const list = document.querySelector('#ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
             list.innerHTML += `<div class="rank-item"><span>${i+1}ST</span><span>${Math.floor(s)}</span></div>`;
@@ -127,28 +128,28 @@
     function loop() {
         const gY = cvs.height - 100;
         if(isLive) {
-            cfg.spd += 0.0025; 
+            // [난이도 로직] 시간에 따라 아주 천천히 가속 (0.002 -> 0.0018)
+            cfg.spd += 0.0018; 
             p.dy += cfg.grav; 
             p.y += p.dy;
 
-            // 천장 처리
             if(p.y < 0) { p.y = 0; p.dy = 0; }
-
-            // 바닥 착지
             if(p.y >= gY - p.h) { 
                 p.y = gY - p.h; 
                 p.dy = 0; 
                 p.jc = 0; 
             }
 
-            score += cfg.spd / 8;
+            score += cfg.spd / 10;
             cfg.next -= cfg.spd;
 
             if(cfg.next <= 0) {
-                // 장애물 높이는 요청하신 대로 원래의 낮은/중간 높이 유지
                 let h = Math.random() > 0.7 ? 40 : 80; 
                 obs.push({ x: cvs.width + 100, y: gY - h, w: 35, h: h });
-                cfg.next = (cfg.gap + Math.random() * 300) * (15 / cfg.spd);
+                
+                // [난이도 로직] 속도가 빨라질수록 장애물 생성 간격을 유동적으로 조절
+                let currentGap = cfg.gap * (cfg.baseSpd / cfg.spd);
+                cfg.next = (Math.max(currentGap, 400) + Math.random() * 300);
             }
 
             obs.forEach((o, i) => {
@@ -157,9 +158,9 @@
                     p.hp--; p.inv = 60;
                     if(p.hp <= 0) {
                         isLive = false;
-                        let r = JSON.parse(localStorage.getItem('neon_vFinal') || "[]");
+                        let r = JSON.parse(localStorage.getItem('neon_vFinal_v2') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_vFinal', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_vFinal_v2', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
