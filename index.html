@@ -9,122 +9,131 @@
 
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
         
-        /* [PC/모바일 공용 레이아웃 최적화] */
+        /* [핵심 패치] 어떤 기기에서도 잘리지 않는 동적 높이 설정 */
         body { 
             height: 100vh; 
-            height: -webkit-fill-available; 
+            height: 100dvh; /* 최신 브라우저용 동적 높이 */
             background: #000; 
             overflow: hidden; 
             display: flex; 
             flex-direction: column; 
-            font-family: 'Pretendard', sans-serif; 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
             color: white; 
         }
-        
-        /* 게임 화면이 잘리지 않도록 max-height 설정 추가 */
-        #game-container { 
-            position: relative; 
+
+        /* 게임 영역: 비율을 유지하며 남는 공간을 꽉 채움 */
+        #game-area { 
             flex: 1; 
+            position: relative; 
             width: 100%; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             background: var(--bg);
-            overflow: hidden;
         }
 
-        /* 캔버스 비율 유지 (900:450) */
         canvas { 
             max-width: 100%; 
             max-height: 100%; 
-            object-fit: contain; 
-            background: #000;
+            object-fit: contain; /* 비율 유지하며 화면 안잘리게 고정 */
         }
-        
-        /* 메뉴 레이어 디자인 강화 */
+
+        /* 랭킹 및 메뉴 레이어 */
         .overlay { 
             position: absolute; 
             inset: 0; 
-            background: rgba(0, 0, 0, 0.9); 
+            background: rgba(0, 0, 0, 0.92); 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
             align-items: center; 
             z-index: 100;
+            padding: 20px;
         }
 
-        #title { font-size: clamp(32px, 8vw, 48px); font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 5px; }
+        #title { font-size: clamp(34px, 10vw, 52px); font-weight: 900; color: var(--gold); text-shadow: 0 0 25px var(--gold); margin-bottom: 15px; }
         
-        /* 랭킹 표시 영역 강조 */
-        .rank-box { margin-bottom: 25px; text-align: center; }
-        .rank-label { font-size: 14px; color: #888; letter-spacing: 3px; margin-bottom: 5px; }
-        .rank-value { font-size: clamp(28px, 6vw, 36px); font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.4); }
+        /* 랭킹(High Score) 디자인 강화 */
+        .rank-board { margin-bottom: 25px; text-align: center; border: 2px solid rgba(255,204,0,0.3); padding: 15px 40px; border-radius: 20px; background: rgba(255,204,0,0.05); }
+        .rank-label { font-size: 13px; color: var(--gold); letter-spacing: 4px; margin-bottom: 5px; opacity: 0.8; }
+        .rank-value { font-size: clamp(30px, 8vw, 42px); font-weight: 900; color: #fff; }
 
-        .settings-wrap { 
-            background: rgba(255,255,255,0.07); 
+        .config-box { 
+            background: rgba(255,255,255,0.08); 
             padding: 20px; 
             border-radius: 24px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            width: 90%; 
+            width: 100%; 
             max-width: 360px; 
-            margin-bottom: 20px; 
+            margin-bottom: 25px; 
         }
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; }
-        .badge { background: var(--gold); color: #000; padding: 3px 12px; border-radius: 6px; font-size: 14px; }
+        .config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 14px; }
+        .val-tag { background: var(--gold); color: #000; padding: 2px 10px; border-radius: 6px; font-size: 13px; }
         
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
-        .diff-btn { background: #1a1a1a; border: 1px solid #333; color: #777; padding: 12px 0; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
-        .diff-btn.active { background: var(--gold); border-color: var(--gold); color: #000; box-shadow: 0 0 15px rgba(255,204,0,0.4); }
+        .diff-selector { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+        .diff-btn { background: #1a1a1a; border: 1px solid #333; color: #666; padding: 12px 0; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 15px; }
+        .diff-btn.active { background: var(--gold); border-color: var(--gold); color: #000; box-shadow: 0 0 15px rgba(255,204,0,0.5); }
 
-        input[type="range"] { width: 100%; height: 8px; accent-color: var(--gold); cursor: pointer; margin: 15px 0 20px; }
-        .btn-start { background: var(--gold); color: #000; padding: 20px 80px; font-size: 24px; font-weight: 900; border-radius: 100px; border: none; cursor: pointer; transition: 0.3s; }
-        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--gold); }
+        input[type="range"] { width: 100%; height: 6px; accent-color: var(--gold); cursor: pointer; margin: 15px 0 20px; }
+        .start-trigger { background: var(--gold); color: #000; padding: clamp(15px, 4vw, 22px) 80px; font-size: 24px; font-weight: 900; border-radius: 100px; border: none; cursor: pointer; transition: 0.2s; }
+        .start-trigger:active { transform: scale(0.95); }
 
-        /* 하단 정보바 & 광고 레이아웃 고정 */
-        #bottom-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-top: 1px solid #222; z-index: 10; font-size: 14px; font-weight: bold; }
-        #ad-area { width: 100%; height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; overflow: hidden; }
+        /* 하단 바 및 광고 영역 최적화 */
+        #status-bar { height: 45px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; font-size: 13px; font-weight: 900; border-top: 1px solid #1a1a1a; }
+        #ad-container { 
+            height: 70px; 
+            background: #000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border-top: 1px solid #1a1a1a;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
+    <div id="game-area">
         <canvas id="cvs"></canvas>
+        
         <div id="ovl" class="overlay">
             <div id="title">NEON RUNNER</div>
             
-            <div class="rank-box">
-                <div class="rank-label">TOP SCORE</div>
-                <div id="menu-best" class="rank-value">0</div>
+            <div class="rank-board">
+                <div class="rank-label">PERSONAL BEST</div>
+                <div id="best-score-display" class="rank-value">0</div>
             </div>
 
-            <div class="settings-wrap">
-                <div class="row"><span>ENGINE SPEED</span><span id="speed-val" class="badge">12</span></div>
+            <div class="config-box">
+                <div class="config-row"><span>ENGINE SPEED</span><span id="speed-label" class="val-tag">12</span></div>
                 <input type="range" id="speed-slider" min="1" max="24" value="12">
-                <div class="row"><span>DIFFICULTY</span><span id="diff-label" class="badge">2</span></div>
-                <div class="diff-grid" id="diff-selector">
-                    <button class="diff-btn" data-level="1">1</button>
-                    <button class="diff-btn active" data-level="2">2</button>
-                    <button class="diff-btn" data-level="3">3</button>
-                    <button class="diff-btn" data-level="4">4</button>
-                    <button class="diff-btn" data-level="5">5</button>
+                <div class="config-row"><span>LEVEL</span><span id="diff-tag" class="val-tag">2</span></div>
+                <div class="diff-selector" id="diff-btns">
+                    <button class="diff-btn" data-lv="1">1</button>
+                    <button class="diff-btn active" data-lv="2">2</button>
+                    <button class="diff-btn" data-lv="3">3</button>
+                    <button class="diff-btn" data-lv="4">4</button>
+                    <button class="diff-btn" data-lv="5">5</button>
                 </div>
             </div>
-            <button class="btn-start" id="start-btn">GAME START</button>
+            <button class="start-trigger" id="game-start">GAME START</button>
         </div>
     </div>
 
-    <div id="bottom-bar">
-        <div id="score-txt">SCORE: 0</div>
-        <div id="best-txt" style="color:var(--gold);">BEST: 0</div>
+    <div id="status-bar">
+        <div id="cur-score">SCORE: 0</div>
+        <div id="best-score" style="color:var(--gold);">BEST: 0</div>
     </div>
 
-    <div id="ad-area">
+    <div id="ad-container">
         <ins class="adsbygoogle"
-             style="display:inline-block; width:320px; height:50px"
+             style="display:block; width:320px; height:50px"
              data-ad-client="ca-pub-7503206245117361"
-             data-ad-slot="9285335402"></ins>
+             data-ad-slot="9285335402"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
@@ -133,16 +142,16 @@
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         cvs.width = 900; cvs.height = 450;
         
-        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
-        const sSpeed = document.getElementById('speed-slider'), vSpeed = document.getElementById('speed-val');
-        const diffBtns = document.querySelectorAll('.diff-btn'), diffLabel = document.getElementById('diff-label');
-        const menuBest = document.getElementById('menu-best');
+        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('game-start');
+        const sRange = document.getElementById('speed-slider'), sVal = document.getElementById('speed-label');
+        const diffBtns = document.querySelectorAll('.diff-btn'), diffTag = document.getElementById('diff-tag');
+        const bestRank = document.getElementById('best-score-display');
 
-        let isLive = false, score = 0, currentDiff = 2;
-        let player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
-        let obs = [], items = [], config = { speed: 12, timer: 0 };
+        let isLive = false, score = 0, currentLv = 2;
+        let p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
+        let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 2.6 };
 
-        const diffSettings = {
+        const lvMap = {
             1: { sm: 0.8, spm: 1.3, g: 2.4 },
             2: { sm: 1.0, spm: 1.0, g: 2.6 },
             3: { sm: 1.3, spm: 0.8, g: 2.8 },
@@ -150,38 +159,29 @@
             5: { sm: 2.0, spm: 0.5, g: 3.2 }
         };
 
-        const updateBestDisplay = () => {
-            const best = Math.floor(localStorage.getItem('nr_best') || 0);
-            menuBest.innerText = best;
-            document.getElementById('best-txt').innerText = "BEST: " + best;
+        const loadRank = () => {
+            const best = Math.floor(localStorage.getItem('nr_best_v2') || 0);
+            bestRank.innerText = best;
+            document.getElementById('best-score').innerText = "BEST: " + best;
         };
-        updateBestDisplay();
+        loadRank();
 
-        sSpeed.oninput = () => { vSpeed.innerText = sSpeed.value; };
-        diffBtns.forEach(btn => {
-            btn.onclick = () => {
-                diffBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentDiff = parseInt(btn.dataset.level);
-                diffLabel.innerText = currentDiff;
+        sRange.oninput = () => { sVal.innerText = sRange.value; };
+        diffBtns.forEach(b => {
+            b.onclick = () => {
+                diffBtns.forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                currentLv = parseInt(b.dataset.lv);
+                diffTag.innerText = currentLv;
             };
         });
 
-        function drawHeart(x, y, size, color, empty = false) {
-            ctx.save(); ctx.translate(x, y); ctx.beginPath(); ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(-size/2, -size/2, -size, size/4, 0, size);
-            ctx.bezierCurveTo(size, size/4, size/2, -size/2, 0, 0);
-            ctx.fillStyle = empty ? "#222" : color;
-            if(!empty) { ctx.shadowBlur = 10; ctx.shadowColor = color; }
-            ctx.fill(); ctx.restore();
-        }
-
         const jump = (e) => {
-            if(!isLive || e.target.closest('.settings-wrap') || e.target === startBtn) return;
-            if(player.jCount < 2) {
-                const s = (config.speed + (score/2000)) * 0.1;
-                player.dy = (player.jCount === 0) ? -(24 + s) : -(18 + s);
-                player.jCount++;
+            if(!isLive || e.target.closest('.config-box') || e.target === startBtn) return;
+            if(p.jc < 2) {
+                const s = (cfg.spd + (score/2000)) * 0.1;
+                p.dy = (p.jc === 0) ? -(24 + s) : -(18 + s);
+                p.jc++;
             }
         };
 
@@ -189,47 +189,83 @@
         window.addEventListener('mousedown', jump);
         
         startBtn.onclick = () => {
-            const d = diffSettings[currentDiff];
-            config.speed = parseInt(sSpeed.value) * d.sm;
-            config.gravity = d.g;
-            player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
+            const l = lvMap[currentLv];
+            cfg.spd = parseInt(sRange.value) * l.sm;
+            cfg.grav = l.g;
+            p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
             obs = []; items = []; score = 0; isLive = true;
             ovl.style.display = 'none';
         };
 
-        function update() {
-            if(!isLive) return;
-            const d = diffSettings[currentDiff];
-            let s = config.speed + (score/2000);
-            player.dy += config.gravity; player.y += player.dy;
-            if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
-            if(player.invul > 0) player.invul--;
-            score += (s/10) * currentDiff; 
-            config.timer -= s;
-            if(config.timer <= 0) { 
-                const pattern = Math.random();
-                if(pattern < 0.3) {
-                    for(let i=0; i<2; i++) obs.push({ x: 950 + (i * 280), y: 375, w: 20, h: 20, s: s });
-                } else {
-                    obs.push({ x: 950, y: 375, w: 20, h: 20, s: s });
-                }
-                if(Math.random() < 0.2) items.push({ x: 1050, y: 220, type: 'heart' });
-                config.timer = (450 + Math.random() * 300) * (12/s) * d.spm; 
-            }
-            obs.forEach((o, i) => { o.x -= o.s; if(player.invul <= 0 && player.x + 5 < o.x + o.w && player.x + 30 > o.x && player.y + 40 > o.y) { player.hp--; player.invul = 60; if(player.hp <= 0) { isLive = false; const best = localStorage.getItem('nr_best') || 0; if(score > best) localStorage.setItem('nr_best', score); updateBestDisplay(); ovl.style.display = 'flex'; } } if(o.x < -100) obs.splice(i, 1); });
-            items.forEach((it, i) => { it.x -= s; if(Math.abs(player.x - it.x) < 45 && Math.abs(player.y - it.y) < 60) { if(it.type === 'heart' && player.hp < 3) player.hp++; items.splice(i, 1); } });
-            document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
+        function drawHeart(x, y, sz, col, empty) {
+            ctx.save(); ctx.translate(x, y); ctx.beginPath(); ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-sz/2, -sz/2, -sz, sz/4, 0, sz);
+            ctx.bezierCurveTo(sz, sz/4, sz/2, -sz/2, 0, 0);
+            ctx.fillStyle = empty ? "#222" : col;
+            if(!empty) { ctx.shadowBlur = 10; ctx.shadowColor = col; }
+            ctx.fill(); ctx.restore();
         }
 
-        function draw() {
+        function loop() {
+            if(isLive) {
+                const l = lvMap[currentLv];
+                let s = cfg.spd + (score/2000);
+                p.dy += cfg.grav; p.y += p.dy;
+                if(p.y > 350) { p.y = 350; p.dy = 0; p.jc = 0; }
+                if(p.inv > 0) p.inv--;
+                score += (s/10) * currentLv;
+                cfg.timer -= s;
+
+                if(cfg.timer <= 0) {
+                    if(Math.random() < 0.3) {
+                        for(let i=0; i<2; i++) obs.push({ x: 950 + (i * 280), y: 375, w: 22, h: 22, s: s });
+                    } else {
+                        obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
+                    }
+                    if(Math.random() < 0.15) items.push({ x: 1050, y: 220, type: 'h' });
+                    cfg.timer = (480 + Math.random() * 320) * (12/s) * l.spm;
+                }
+
+                obs.forEach((o, i) => {
+                    o.x -= o.s;
+                    if(p.inv <= 0 && p.x + 5 < o.x + o.w && p.x + 35 > o.x && p.y + 40 > o.y) {
+                        p.hp--; p.inv = 60;
+                        if(p.hp <= 0) {
+                            isLive = false;
+                            const best = localStorage.getItem('nr_best_v2') || 0;
+                            if(score > best) localStorage.setItem('nr_best_v2', score);
+                            loadRank();
+                            ovl.style.display = 'flex';
+                        }
+                    }
+                    if(o.x < -100) obs.splice(i, 1);
+                });
+                items.forEach((it, i) => {
+                    it.x -= s;
+                    if(Math.abs(p.x - it.x) < 45 && Math.abs(p.y - it.y) < 60) {
+                        if(p.hp < 3) p.hp++;
+                        items.splice(i, 1);
+                    }
+                });
+                document.getElementById('cur-score').innerText = "SCORE: " + Math.floor(score);
+            }
+
+            // Draw
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
-            ctx.strokeStyle = "#222"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
-            for(let i=0; i<3; i++) drawHeart(55 + (i*42), 55, 17, "#ffcc00", i >= player.hp);
-            if(player.invul % 10 < 5) { ctx.fillStyle = player.jCount === 2 ? "#ffcc00" : "#00f2ff"; ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle; ctx.fillRect(player.x, player.y, 40, 45); ctx.shadowBlur = 0; }
-            ctx.fillStyle = "#ff0077"; ctx.shadowBlur = 8; ctx.shadowColor = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h)); ctx.shadowBlur = 0;
-            items.forEach(it => { if(it.type === 'heart') drawHeart(it.x, it.y, 15, "#ffcc00"); });
+            ctx.strokeStyle = "#222"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 397); ctx.lineTo(900, 397); ctx.stroke();
+            for(let i=0; i<3; i++) drawHeart(55 + (i*42), 55, 18, "#ffcc00", i >= p.hp);
+            if(p.inv % 10 < 5) {
+                ctx.fillStyle = p.jc === 2 ? "#ffcc00" : "#00f2ff";
+                ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+                ctx.fillRect(p.x, p.y, 40, 45); ctx.shadowBlur = 0;
+            }
+            ctx.fillStyle = "#ff0077"; ctx.shadowBlur = 10; ctx.shadowColor = "#ff0077";
+            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+            ctx.shadowBlur = 0;
+            items.forEach(it => drawHeart(it.x, it.y, 16, "#ffcc00"));
+            
+            requestAnimationFrame(loop);
         }
-        function loop() { update(); draw(); requestAnimationFrame(loop); }
         loop();
     };
     </script>
