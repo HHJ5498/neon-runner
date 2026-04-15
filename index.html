@@ -10,33 +10,31 @@
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
-        body { height: 100vh; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: 'Apple SD Gothic Neo', sans-serif; color: white; }
+        body { height: 100vh; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; color: white; }
         
-        /* 모바일 화면 맞춤 설정 (object-fit Contain) */
         #game-view { position: relative; flex: 1; width: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; overflow: hidden; }
         canvas { width: 100%; height: 100%; object-fit: contain; }
         
-        /* 메뉴 레이어 */
         .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; padding: 20px; }
-        #title { font-size: 42px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 25px; }
+        #title { font-size: 42px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 10px; }
         
-        /* 설정 박스 (PC/모바일 공용 디자인) */
-        .settings-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 340px; margin-bottom: 15px; pointer-events: auto; }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .rank-display { margin-bottom: 20px; text-align: center; }
+        .rank-label { font-size: 14px; color: #aaa; letter-spacing: 2px; }
+        .rank-value { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+        .settings-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 340px; margin-bottom: 15px; pointer-events: auto; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .val-badge { background: var(--gold); color: #000; padding: 2px 10px; border-radius: 5px; font-weight: 900; font-size: 13px; }
         
-        /* 난이도 선택 버튼 Grid */
         .difficulty-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .diff-btn { background: #222; border: 1px solid #444; color: #888; padding: 12px 0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .diff-btn { background: #222; border: 1px solid #444; color: #888; padding: 12px 0; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .diff-btn.active { background: var(--gold); border-color: var(--gold); color: #000; box-shadow: 0 0 15px rgba(255,204,0,0.4); }
 
-        /* 슬라이더 스타일 */
-        input[type="range"] { width: 100%; height: 8px; accent-color: var(--gold); cursor: pointer; margin: 10px 0 15px; }
-        .btn-start { background: var(--gold); color: #000; padding: 18px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; pointer-events: auto; margin-top: 10px; transition: 0.2s; }
+        input[type="range"] { width: 100%; height: 10px; accent-color: var(--gold); cursor: pointer; margin: 10px 0 15px; }
+        .btn-start { background: var(--gold); color: #000; padding: 18px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; pointer-events: auto; transition: 0.2s; }
         .btn-start:active { transform: scale(0.95); }
 
-        /* 하단 정보바 및 광고 */
-        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; font-size: 14px; }
+        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; }
         #ad-bottom { width: 100%; height: 65px; background: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; border-top: 1px solid #222; }
     </style>
 </head>
@@ -46,10 +44,15 @@
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
             <div id="title">Neon Runner</div>
+            
+            <div class="rank-display">
+                <div class="rank-label">TOP SCORE</div>
+                <div id="menu-best" class="rank-value">0</div>
+            </div>
+
             <div class="settings-box">
                 <div class="setting-row"><span>기본 속도</span><span id="speed-val" class="val-badge">12</span></div>
                 <input type="range" id="speed-slider" min="1" max="24" value="12">
-                
                 <div class="setting-row"><span>난이도 (LEVEL)</span><span id="diff-label" class="val-badge">2</span></div>
                 <div class="difficulty-grid" id="diff-selector">
                     <button class="diff-btn" data-level="1">1</button>
@@ -85,19 +88,26 @@
         const sSpeed = document.getElementById('speed-slider'), vSpeed = document.getElementById('speed-val');
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
         const diffBtns = document.querySelectorAll('.diff-btn'), diffLabel = document.getElementById('diff-label');
+        const menuBest = document.getElementById('menu-best');
 
         let isLive = false, score = 0, currentDiff = 2;
         let player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
         let obs = [], items = [], config = { speed: 12, size: 20, timer: 0 };
 
-        // [중력 패치 완료] 난이도별 중력 수치를 기존 0.8~1.2에서 2.4~3.2로 대폭 인상 (강력 중력)
         const diffSettings = {
-            1: { speedMult: 0.8, spawnMult: 1.3, gravity: 2.4 }, // 1단계 (강력 중력)
-            2: { speedMult: 1.0, spawnMult: 1.0, gravity: 2.6 }, // 2단계 (표준 강력 중력)
-            3: { speedMult: 1.3, spawnMult: 0.8, gravity: 2.8 }, // 3단계
-            4: { speedMult: 1.6, spawnMult: 0.7, gravity: 3.0 }, // 4단계
-            5: { speedMult: 2.0, spawnMult: 0.5, gravity: 3.2 }  // 5단계 (가장 무거운 중력)
+            1: { speedMult: 0.8, spawnMult: 1.3, gravity: 2.4 },
+            2: { speedMult: 1.0, spawnMult: 1.0, gravity: 2.6 },
+            3: { speedMult: 1.3, spawnMult: 0.8, gravity: 2.8 },
+            4: { speedMult: 1.6, spawnMult: 0.7, gravity: 3.0 },
+            5: { speedMult: 2.0, spawnMult: 0.5, gravity: 3.2 }
         };
+
+        const updateBest = () => {
+            const best = localStorage.getItem('nr_best') || 0;
+            menuBest.innerText = Math.floor(best);
+            document.getElementById('best-txt').innerText = "BEST: " + Math.floor(best);
+        };
+        updateBest();
 
         sSpeed.oninput = () => { vSpeed.innerText = sSpeed.value; };
         diffBtns.forEach(btn => {
@@ -119,14 +129,11 @@
             ctx.fill(); ctx.restore();
         }
 
-        // [점프 로직 패치 완료] 중력 인상에 맞춰 점프 초기 힘(dy)도 인상 (-17.5/-15에서 -24/-18로 변경)
         const jump = (e) => {
             if(!isLive || e.target.closest('.settings-box') || e.target === startBtn) return;
             if(player.jCount < 2) {
-                // 게임 속도가 빠를수록 점프력도 아주 미세하게 증가
-                const speedOffset = (config.speed + (score/2000)) * 0.1;
-                // [강력 중력 패치] 점프 초기 힘 증가
-                player.dy = (player.jCount === 0) ? -(24 + speedOffset) : -(18 + speedOffset);
+                const s = (config.speed + (score/2000)) * 0.1;
+                player.dy = (player.jCount === 0) ? -(24 + s) : -(18 + s);
                 player.jCount++;
             }
         };
@@ -138,7 +145,7 @@
             e.stopPropagation();
             const d = diffSettings[currentDiff];
             config.speed = parseInt(sSpeed.value) * d.speedMult;
-            config.gravity = d.gravity; // 강력 중력 적용
+            config.gravity = d.gravity;
             player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
             obs = []; items = []; score = 0; isLive = true;
             ovl.style.display = 'none';
@@ -148,32 +155,33 @@
             if(!isLive) return;
             const d = diffSettings[currentDiff];
             let s = config.speed + (score/2000);
-            
-            // [강력 중력 패치 완료] 캐릭터 가속도 증가
             player.dy += config.gravity; 
             player.y += player.dy;
-            
-            // 바닥 및 2단 점프 초기화
             if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
             if(player.invul > 0) player.invul--;
-            
-            // 난이도 비례 점수 증가
             score += (s/10) * currentDiff; 
             config.timer -= s;
-            
+
             if(config.timer <= 0) { 
                 const startX = 950;
-                // 장애물 생성 (크기 20 고정)
-                obs.push({ x: startX, y: 395-20, w: 20, h: 20, s: s });
-                if(Math.random() < 0.3) items.push({ x: startX + 100, y: 220, type: 'heart' });
+                const pattern = Math.random();
+                
+                if(pattern < 0.3) { 
+                    // [연속 장애물 패치] 간격을 230에서 280으로 살짝 넓힘 (점프 후 착지 시간 확보)
+                    for(let i=0; i<2; i++) {
+                        obs.push({ x: startX + (i * 280), y: 395-20, w: 20, h: 20, s: s });
+                    }
+                } else {
+                    obs.push({ x: startX, y: 395-20, w: 20, h: 20, s: s });
+                }
+                
+                if(Math.random() < 0.2) items.push({ x: 1050, y: 220, type: 'heart' });
                 config.timer = (450 + Math.random() * 300) * (12/s) * d.spawnMult; 
             }
             
-            // 충돌 판정 (살짝 자비롭게 조정)
-            obs.forEach((o, i) => { o.x -= o.s; if(player.invul <= 0 && player.x + 5 < o.x + o.w && player.x + 30 > o.x && player.y + 40 > o.y) { player.hp--; player.invul = 60; if(player.hp <= 0) { isLive = false; ovl.style.display = 'flex'; } } if(o.x < -100) obs.splice(i, 1); });
+            obs.forEach((o, i) => { o.x -= o.s; if(player.invul <= 0 && player.x + 5 < o.x + o.w && player.x + 30 > o.x && player.y + 40 > o.y) { player.hp--; player.invul = 60; if(player.hp <= 0) { isLive = false; const best = localStorage.getItem('nr_best') || 0; if(score > best) localStorage.setItem('nr_best', score); updateBest(); ovl.style.display = 'flex'; } } if(o.x < -100) obs.splice(i, 1); });
             items.forEach((it, i) => { it.x -= s; if(Math.abs(player.x - it.x) < 45 && Math.abs(player.y - it.y) < 60) { if(it.type === 'heart' && player.hp < 3) player.hp++; items.splice(i, 1); } });
             document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
-            document.getElementById('best-txt').innerText = "BEST: " + (localStorage.getItem('nr_best') || 0);
         }
 
         function draw() {
