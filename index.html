@@ -3,49 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: CUSTOMIZER</title>
+    <title>NEON DASH: SPEED CONTROL</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; position: fixed; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; }
+        
+        html, body { 
+            height: 100%; width: 100%; background: #000; 
+            overflow: hidden; position: fixed; 
+            display: flex; flex-direction: column;
+            user-select: none; -webkit-user-select: none;
+        }
         
         #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #010103; overflow: hidden; }
-        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; background: #000; }
+        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; background: #000; z-index: 1; }
         
+        /* 💡 오버레이 메뉴 스타일 강화 (최상단 z-index) */
+        .overlay { 
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.92); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 9999; 
+        }
+
+        #title { color: #fff; font-size: 36px; margin-bottom: 30px; font-weight: 900; text-shadow: 0 0 15px var(--neon-blue); }
+
+        /* 💡 속도 조절 박스 */
+        .settings-box { 
+            background: #111; padding: 25px; border-radius: 20px; 
+            border: 2px solid var(--neon-blue); margin-bottom: 30px; 
+            width: 300px; text-align: center; box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+        .settings-box label { 
+            color: #fff; font-size: 16px; display: block; 
+            margin-bottom: 15px; font-weight: bold; letter-spacing: 1px;
+        }
+        
+        /* 슬라이더 디자인 커스텀 */
+        #speed-slider { 
+            width: 100%; height: 10px; border-radius: 5px; 
+            background: #333; outline: none; cursor: pointer;
+            accent-color: var(--neon-blue);
+        }
+        
+        #speed-display { 
+            color: var(--neon-blue); font-size: 24px; font-weight: 900; 
+            display: inline-block; margin-top: 10px;
+        }
+
+        .btn-start { 
+            background: var(--neon-blue); color: #000; padding: 18px 70px; 
+            font-size: 24px; font-weight: 900; border-radius: 50px; 
+            box-shadow: 0 0 20px var(--neon-blue); cursor: pointer; border: none;
+        }
+
+        /* 하단 바 */
         #stat-bar { width: 100%; height: 55px; background: #080808; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
-        #ad-bottom-zone { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
-
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        #title { color: #fff; font-size: 32px; margin-bottom: 20px; font-weight: 900; text-shadow: 0 0 10px var(--neon-blue); }
-
-        /* 💡 속도 조절 슬라이더 스타일 */
-        .settings { background: #111; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 25px; width: 280px; text-align: center; }
-        .settings label { color: #aaa; font-size: 14px; display: block; margin-bottom: 10px; font-weight: bold; }
-        #speed-slider { width: 100%; cursor: pointer; accent-color: var(--neon-blue); }
-        #speed-val { color: var(--neon-blue); font-size: 20px; font-weight: 900; margin-left: 5px; }
-
-        .btn-start { background: var(--neon-blue); color: #000; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; box-shadow: 0 0 20px var(--neon-blue); cursor: pointer; border: none; transition: 0.2s; }
-        .btn-start:active { transform: scale(0.95); box-shadow: 0 0 5px var(--neon-blue); }
-
         .label { font-size: 10px; color: #555; font-weight: bold; }
         .val { color: white; font-size: 16px; font-weight: 900; }
         .fever-wrap { width: 60px; height: 8px; background: #111; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); }
+        #ad-bottom-zone { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
 
     <div id="game-view">
         <canvas id="cvs"></canvas>
+        
         <div id="ovl" class="overlay">
             <div id="title">NEON DASH</div>
             
-            <div class="settings">
-                <label>GAME SPEED: <span id="speed-val">12</span></label>
-                <input type="range" id="speed-slider" min="1" max="16" value="12">
+            <div class="settings-box">
+                <label>SELECT SPEED</label>
+                <input type="range" id="speed-slider" min="1" max="16" value="10">
+                <div id="speed-display">10</div>
             </div>
 
             <button class="btn-start" id="start-btn">START</button>
@@ -70,26 +104,28 @@
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
-    // 💡 물리 엔진 및 설정 관리
+    // 💡 설정 및 물리 엔진 연동
     const slider = document.getElementById('speed-slider');
-    const speedText = document.getElementById('speed-val');
+    const display = document.getElementById('speed-display');
     
-    const config = {
-        baseSpeed: 12,
-        jumpPower: -22,
+    // 초기 물리 설정값
+    let config = {
+        baseSpeed: 10,
+        jumpPower: -21,
         gravity: 1.4,
-        spawnRate: 35
+        spawnRate: 40
     };
 
-    // 슬라이더 값 변경 시 실시간 반영
+    // 💡 슬라이더 조작 시 물리 파라미터 실시간 계산 (시뮬레이션 반영)
     slider.oninput = function() {
         const val = parseInt(this.value);
-        speedText.innerText = val;
+        display.innerText = val;
         config.baseSpeed = val;
         
-        // 💡 속도에 따른 물리 밸런스 자동 조절
-        config.jumpPower = -18 - (val * 0.4); // 속도가 빠를수록 더 높게 점프
-        config.spawnRate = Math.max(15, 50 - Math.floor(val * 1.5)); // 속도가 빠를수록 장애물 자주 생성
+        // 속도가 낮으면 장애물 간격을 넓히고, 높으면 좁힘
+        config.spawnRate = Math.max(15, 60 - (val * 2));
+        // 속도에 비례해 점프 높이 최적화 (너무 낮으면 못 넘음)
+        config.jumpPower = -17 - (val * 0.45);
     };
 
     const game = {
@@ -97,7 +133,7 @@
         start() {
             this.isLive = true; this.score = 0; this.gauge = 0; this.frame = 0;
             p.y = 350; p.dy = 0; p.jCount = 0; 
-            p.j = config.jumpPower; // 시작 시점의 설정값 적용
+            p.j = config.jumpPower; // 현재 슬라이더 값에 따른 점프력 적용
             obs = []; coins = [];
             document.getElementById('ovl').style.display = 'none';
         },
@@ -108,17 +144,20 @@
         }
     };
 
-    const p = { x: 120, y: 350, dy: 0, g: config.gravity, j: -22, jCount: 0 };
+    const p = { x: 120, y: 350, dy: 0, g: 1.4, j: -21, jCount: 0 };
     let obs = [], coins = [];
 
+    // 입력 처리
     const btn = document.getElementById('start-btn');
     btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); game.start(); };
 
     function handleAction(e) {
-        if (!game.isLive || e.target.closest('.settings') || e.target.id === 'start-btn') return;
+        // 슬라이더를 만질 때는 점프하지 않음
+        if (!game.isLive || e.target.id === 'speed-slider' || e.target.id === 'start-btn') return;
         if (p.jCount < 2) { p.dy = p.j; p.jCount++; }
     }
 
+    // PC/모바일 통합 클릭/터치 이벤트
     window.addEventListener('mousedown', handleAction);
     window.addEventListener('touchstart', (e) => { handleAction(e); }, { passive: false });
 
@@ -152,7 +191,7 @@
 
         coins.forEach((c, i) => {
             c.x -= currentSpeed;
-            if(game.fever) { c.x += (p.x - c.x) * 0.2; c.y += (p.y - c.y) * 0.2; }
+            if(game.fever) { c.x += (p.x - c.x) * 0.22; c.y += (p.y - c.y) * 0.22; }
             if(Math.abs(p.x - c.x) < 55 && Math.abs(p.y - c.y) < 55) {
                 coins.splice(i, 1);
                 game.gauge = Math.min(100, game.gauge + 10);
