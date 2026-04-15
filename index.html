@@ -3,41 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GOLDEN DASH PRO</title>
+    <title>Neon Runner</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
-        body { height: 100vh; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: 'Pretendard', sans-serif; color: white; }
+        body { height: 100vh; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; color: white; }
         
         #game-view { position: relative; flex: 1; width: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; }
-        canvas { width: 100%; height: 100%; object-fit: contain; transition: transform 0.1s; }
+        canvas { width: 100%; height: 100%; object-fit: contain; }
         
-        /* 세련된 오버레이 디자인 */
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.93); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
-        #title { font-size: 40px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255, 204, 0, 0.6); margin-bottom: 25px; letter-spacing: -1px; }
+        /* 메뉴 레이어 */
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+        #title { font-size: 42px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 25px; }
         
-        /* 설정 박스 (수치 표시 강조) */
-        .settings-box { 
-            background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); 
-            width: 100%; max-width: 340px; margin-bottom: 20px; pointer-events: auto; backdrop-filter: blur(10px);
-        }
-        .setting-item { margin-bottom: 15px; }
-        .setting-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .label-txt { font-size: 13px; color: #aaa; font-weight: 600; }
-        .val-badge { background: var(--gold); color: #000; padding: 2px 8px; border-radius: 6px; font-size: 14px; font-weight: 900; min-width: 45px; text-align: center; }
+        .settings-box { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; border: 1px solid #333; width: 340px; margin-bottom: 20px; pointer-events: auto; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .val-badge { background: var(--gold); color: #000; padding: 2px 10px; border-radius: 5px; font-weight: 900; font-size: 14px; }
         
-        input[type="range"] { width: 100%; height: 10px; background: #333; border-radius: 5px; appearance: none; outline: none; margin: 15px 0; }
-        input[type="range"]::-webkit-slider-thumb { appearance: none; width: 22px; height: 22px; background: var(--gold); border-radius: 50%; cursor: pointer; border: 3px solid #fff; }
-
-        .btn-start { 
-            background: var(--gold); color: #000; padding: 20px 80px; font-size: 22px; font-weight: 900; 
-            border-radius: 50px; border: none; cursor: pointer; pointer-events: auto;
-            transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 30px rgba(255, 204, 0, 0.3);
-        }
-        .btn-start:active { transform: scale(0.95); }
+        input[type="range"] { width: 100%; height: 10px; accent-color: var(--gold); cursor: pointer; margin: 10px 0 20px; }
+        .btn-start { background: var(--gold); color: #000; padding: 20px 80px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; pointer-events: auto; }
 
         #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; }
         #ad-bottom { width: 100%; height: 65px; background: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; }
@@ -48,30 +35,20 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div id="title">GOLDEN DASH</div>
+            <div id="title">Neon Runner</div>
             <div class="settings-box">
-                <div class="setting-item">
-                    <div class="setting-label-row">
-                        <span class="label-txt">ENGINE SPEED</span>
-                        <span id="speed-val" class="val-badge">12</span>
-                    </div>
-                    <input type="range" id="speed-slider" min="1" max="24" value="12">
-                </div>
-                <div class="setting-item">
-                    <div class="setting-label-row">
-                        <span class="label-txt">OBSTACLE SIZE</span>
-                        <span id="size-val" class="val-badge">20</span>
-                    </div>
-                    <input type="range" id="size-slider" min="15" max="40" value="20">
-                </div>
+                <div class="setting-row"><span>엔진 속도</span><span id="speed-val" class="val-badge">12</span></div>
+                <input type="range" id="speed-slider" min="1" max="24" value="12">
+                <div class="setting-row"><span>장애물 규격</span><span id="size-val" class="val-badge">20</span></div>
+                <input type="range" id="size-slider" min="15" max="40" value="20">
             </div>
-            <button class="btn-start" id="start-btn">START GAME</button>
+            <button class="btn-start" id="start-btn">GAME START</button>
         </div>
     </div>
 
     <div id="stat-bar">
-        <div id="score-txt" style="font-weight:900; font-size: 18px;">0</div>
-        <div id="best-txt" style="color:var(--gold); font-weight:bold; font-size: 14px;">BEST: 0</div>
+        <div id="score-txt" style="font-weight:900;">SCORE: 0</div>
+        <div id="best-txt" style="color:var(--gold); font-weight:bold;">BEST: 0</div>
     </div>
 
     <div id="ad-bottom">
@@ -87,24 +64,22 @@
     <script>
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
+        cvs.width = 900; cvs.height = 450;
+
         const sSpeed = document.getElementById('speed-slider'), sSize = document.getElementById('size-slider');
         const vSpeed = document.getElementById('speed-val'), vSize = document.getElementById('size-val');
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
-        
-        cvs.width = 900; cvs.height = 450;
 
-        let isLive = false, score = 0, isFever = false, shake = 0;
-        let player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
+        let isLive = false, score = 0, player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
         let obs = [], items = [], config = { speed: 12, size: 20, timer: 0 };
 
-        // [핵심] 수치 표시 업데이트 로직 (절대 안 끊기게 수정)
-        const updateSettingsUI = () => {
+        // 수치 실시간 업데이트
+        const updateUI = () => {
             vSpeed.innerText = sSpeed.value;
             vSize.innerText = sSize.value;
         };
-        sSpeed.addEventListener('input', updateSettingsUI);
-        sSize.addEventListener('input', updateSettingsUI);
-        updateSettingsUI();
+        sSpeed.oninput = updateUI;
+        sSize.oninput = updateUI;
 
         function drawHeart(x, y, size, color, empty = false) {
             ctx.save(); ctx.translate(x, y); ctx.beginPath();
@@ -118,32 +93,32 @@
 
         function createPattern(s) {
             const size = config.size, startX = 950, type = Math.random();
-            if(type < 0.4) { // 패턴 1: 점프 연타
+            if(type < 0.4) {
                 for(let i=0; i<3; i++) {
                     obs.push({ x: startX + (i*230), y: 395-size, w: size, h: size, s: s });
-                    items.push({ x: startX + (i*230) + 40, y: 270, type: 'coin' });
+                    items.push({ x: startX + (i*230) + 30, y: 270, type: 'coin' });
                 }
-            } else if(type < 0.7) { // 패턴 2: 2단 점프 구간
+            } else if(type < 0.7) {
                 obs.push({ x: startX, y: 395-size, w: size*4.5, h: size, s: s });
-                for(let j=0; j<6; j++) items.push({ x: startX + (j*45), y: 220, type: 'coin' });
-            } else { // 패턴 3: 쿠키런 식 상하 장애물
+                for(let j=0; j<5; j++) items.push({ x: startX + (j*45), y: 220, type: 'coin' });
+            } else {
                 obs.push({ x: startX, y: 395-size*2.3, w: size, h: size*2.3, s: s });
-                items.push({ x: startX + 60, y: 180, type: (Math.random() < 0.2 ? 'heart' : 'coin') });
+                items.push({ x: startX + 50, y: 200, type: (Math.random() < 0.3 ? 'heart' : 'coin') });
             }
         }
 
         const jump = (e) => {
             if(!isLive || e.target.closest('.settings-box') || e.target === startBtn) return;
             if(player.jCount < 2) {
-                const s = config.speed + (score/2500);
-                player.dy = (player.jCount === 0) ? -(17.5 + (s * 0.5)) : -(14 + (s * 0.4));
+                const s = (config.speed + (score/2500));
+                player.dy = (player.jCount === 0) ? -(17.5 + (s * 0.5)) : -(15 + (s * 0.4));
                 player.jCount++;
             }
         };
 
         window.addEventListener('touchstart', (e) => { jump(e); if(isLive) e.preventDefault(); }, { passive: false });
         window.addEventListener('mousedown', jump);
-
+        
         startBtn.onclick = (e) => {
             e.stopPropagation();
             config.speed = parseInt(sSpeed.value);
@@ -155,24 +130,26 @@
 
         function update() {
             if(!isLive) return;
-            let s = (config.speed + (score/2500)) * (isFever ? 1.4 : 1);
+            let s = config.speed + (score/2500);
             player.dy += 0.9 + (s * 0.04); player.y += player.dy;
             if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
             if(player.invul > 0) player.invul--;
-            if(shake > 0) shake--;
-
             score += s/10; config.timer -= s;
             if(config.timer <= 0) { createPattern(s); config.timer = (450 + Math.random() * 300) * (12/s); }
-
+            
             obs.forEach((o, i) => {
                 o.x -= o.s;
                 if(player.invul <= 0 && player.x + 10 < o.x + o.w && player.x + 30 > o.x && player.y + 40 > o.y) {
-                    player.hp--; player.invul = 60; shake = 15;
-                    if(player.hp <= 0) { isLive = false; ovl.style.display = 'flex'; }
+                    player.hp--; player.invul = 60;
+                    if(player.hp <= 0) {
+                        isLive = false;
+                        const best = localStorage.getItem('nr_best') || 0;
+                        if(score > best) localStorage.setItem('nr_best', Math.floor(score));
+                        ovl.style.display = 'flex';
+                    }
                 }
                 if(o.x < -500) obs.splice(i, 1);
             });
-
             items.forEach((it, i) => {
                 it.x -= s;
                 if(Math.abs(player.x - it.x) < 45 && Math.abs(player.y - it.y) < 60) {
@@ -180,41 +157,24 @@
                     items.splice(i, 1);
                 }
             });
-            document.getElementById('score-txt').innerText = Math.floor(score);
+            document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
+            document.getElementById('best-txt').innerText = "BEST: " + (localStorage.getItem('nr_best') || 0);
         }
 
         function draw() {
-            ctx.clearRect(0,0,900,450);
-            ctx.save();
-            if(shake > 0) ctx.translate(Math.random()*shake - shake/2, Math.random()*shake - shake/2);
-            
-            // 바닥선
-            ctx.strokeStyle = "#222"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
-
-            // HP 하트 (노란색)
+            ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
+            ctx.strokeStyle = "#333"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
             for(let i=0; i<3; i++) drawHeart(55 + (i*42), 55, 17, "#ffcc00", i >= player.hp);
-
-            // 캐릭터
             if(player.invul % 10 < 5) {
-                ctx.fillStyle = player.jCount === 2 ? var(--gold) : "#00f2ff";
-                ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+                ctx.fillStyle = player.jCount === 2 ? "#ffcc00" : "#00f2ff";
                 ctx.fillRect(player.x, player.y, 40, 45);
-                ctx.shadowBlur = 0;
             }
-
-            // 장애물
-            ctx.fillStyle = "#ff0077"; ctx.shadowBlur = 15; ctx.shadowColor = "#ff0077";
-            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h || config.size));
-            
-            // 아이템 (노란색)
-            ctx.shadowBlur = 10; ctx.shadowColor = "#ffcc00";
+            ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h || config.size));
             items.forEach(it => {
                 if(it.type === 'coin') { ctx.fillStyle = "#ffcc00"; ctx.beginPath(); ctx.arc(it.x, it.y, 8, 0, 7); ctx.fill(); }
                 else { drawHeart(it.x, it.y, 15, "#ffcc00"); }
             });
-            ctx.restore();
         }
-
         function loop() { update(); draw(); requestAnimationFrame(loop); }
         loop();
     };
