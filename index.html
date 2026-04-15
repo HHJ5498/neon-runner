@@ -15,16 +15,16 @@
 
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
-            background: var(--bg); padding: 20px 10px; overflow: hidden;
+            background: var(--bg); padding: 15px 10px; overflow: hidden;
         }
 
         #canvas-box {
             position: relative; width: 100%; max-width: 900px; 
-            max-height: 70vh; aspect-ratio: 2 / 1;
+            max-height: 72vh; aspect-ratio: 2 / 1;
             display: flex; justify-content: center; align-items: center;
         }
 
-        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #222; display: block; border-radius: 8px; }
+        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #222; display: block; border-radius: 12px; }
 
         #ovl {
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.96);
@@ -32,39 +32,40 @@
             z-index: 1000; padding: 15px;
         }
 
-        #title { font-size: clamp(20px, 5vw, 32px); font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 8px; }
+        #title { font-size: clamp(22px, 5vw, 34px); font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 10px; }
 
         .rank-list {
-            width: 100%; max-width: 240px; background: rgba(255,255,255,0.05);
-            border-radius: 12px; padding: 8px; margin-bottom: 10px; border: 1px solid rgba(255,204,0,0.2);
+            width: 100%; max-width: 250px; background: rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 8px; margin-bottom: 12px; border: 1px solid rgba(255,204,0,0.2);
         }
-        .rank-row { display: flex; justify-content: space-between; padding: 2px 10px; font-size: 12px; color: #ccc; }
+        .rank-row { display: flex; justify-content: space-between; padding: 3px 10px; font-size: 13px; color: #ccc; }
         .rank-row.top { color: var(--gold); font-weight: bold; }
 
         .controls {
-            width: 100%; max-width: 300px; background: rgba(255,255,255,0.03);
-            padding: 10px; border-radius: 12px; margin-bottom: 12px; pointer-events: auto;
+            width: 100%; max-width: 310px; background: rgba(255,255,255,0.03);
+            padding: 12px; border-radius: 15px; margin-bottom: 15px; pointer-events: auto;
         }
-        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; margin-bottom: 4px; }
-        .badge { background: var(--gold); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
+        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
+        .badge { background: var(--gold); color: #000; padding: 2px 7px; border-radius: 5px; font-size: 10px; }
 
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 4px; }
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 5px; }
         .diff-btn { 
-            background: #222; border: 1px solid #444; color: #888; padding: 6px 0;
-            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
+            background: #222; border: 1px solid #444; color: #888; padding: 8px 0;
+            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px;
         }
         .diff-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
-        input[type="range"] { width: 100%; height: 5px; accent-color: var(--gold); margin: 8px 0 12px; cursor: pointer; }
+        /* 스피드 슬라이더 디자인 */
+        input[type="range"] { width: 100%; height: 6px; accent-color: var(--gold); margin: 10px 0 15px; cursor: pointer; }
 
         .btn-start { 
-            background: var(--gold); color: #000; padding: 12px 60px; 
-            font-size: 18px; font-weight: 900; border-radius: 50px; 
+            background: var(--gold); color: #000; padding: 13px 65px; 
+            font-size: 19px; font-weight: 900; border-radius: 50px; 
             border: none; cursor: pointer;
         }
 
-        #stat-bar { height: 40px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; font-weight: bold; font-size: 13px; }
-        #ad-box { height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        #stat-bar { height: 42px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; font-weight: bold; font-size: 13px; }
+        #ad-box { height: 62px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -85,8 +86,8 @@
                 </div>
 
                 <div class="controls">
-                    <div class="label-row"><span>SPEED</span><span id="s-val" class="badge">12</span></div>
-                    <input type="range" id="s-input" min="1" max="24" value="12">
+                    <div class="label-row"><span>SPEED (1-18)</span><span id="s-val" class="badge">12</span></div>
+                    <input type="range" id="s-input" min="1" max="18" value="12">
                     <div class="label-row"><span>DIFFICULTY</span><span id="d-val" class="badge">2</span></div>
                     <div class="diff-grid">
                         <button class="diff-btn" data-v="1">1</button>
@@ -128,22 +129,22 @@
 
         let isLive = false, score = 0, curLv = 2;
         let p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
-        let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 3.2 };
+        let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 2.8 };
 
         const lvSet = {
-            1: { sm: 0.8, g: 3.0 }, 2: { sm: 1.0, g: 3.2 }, 3: { sm: 1.3, g: 3.5 },
-            4: { sm: 1.6, g: 3.8 }, 5: { sm: 2.0, g: 4.2 }
+            1: { sm: 0.8, g: 2.5 }, 2: { sm: 1.0, g: 2.8 }, 3: { sm: 1.2, g: 3.1 },
+            4: { sm: 1.4, g: 3.4 }, 5: { sm: 1.7, g: 3.8 }
         };
 
         const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal_2') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_human_v2') || "[0,0,0,0,0]");
             rs.forEach((v, i) => { document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
             document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
         };
         const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal_2') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_human_v2') || "[0,0,0,0,0]");
             rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_top5_vFinal_2', JSON.stringify(rs.slice(0,5)));
+            localStorage.setItem('nr_human_v2', JSON.stringify(rs.slice(0,5)));
             syncRanks();
         };
         syncRanks();
@@ -169,10 +170,12 @@
             ovl.style.display = 'none';
         };
 
+        // [핵심] 2단 점프 로직 반영
         const jump = (e) => {
             if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
             if(p.jc < 2) {
-                p.dy = (p.jc === 0) ? -29 : -23; 
+                // 1단은 높게, 2단은 보조 추진력 느낌으로
+                p.dy = (p.jc === 0) ? -27 : -21; 
                 p.jc++;
             }
         };
@@ -189,27 +192,23 @@
             ctx.fillStyle = empty ? "#222" : col; ctx.fill(); ctx.restore();
         }
 
-        // --- [신규] 다양한 장애물 패턴 생성 함수 ---
         function spawnPattern(s) {
             const r = Math.random();
-            if (r < 0.3) { // 패턴 1: 단일 장애물
-                obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
-            } else if (r < 0.5) { // 패턴 2: 연속 2개 (2단 점프 유도)
-                obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
-                obs.push({ x: 1100, y: 375, w: 22, h: 22, s: s });
-            } else if (r < 0.7) { // 패턴 3: 높은 벽 (타이밍 중요)
-                obs.push({ x: 950, y: 355, w: 22, h: 42, s: s });
-            } else if (r < 0.85) { // 패턴 4: 공중 장애물 (점프 조절 필요)
-                obs.push({ x: 950, y: 280, w: 25, h: 25, s: s });
-            } else { // 패턴 5: 넓은 함정
-                obs.push({ x: 950, y: 375, w: 60, h: 22, s: s });
+            const gap = 950;
+            if (r < 0.4) {
+                obs.push({ x: gap, y: 375, w: 22, h: 22, s: s });
+            } else if (r < 0.7) { // 2단 점프가 유용한 2연속 장애물
+                obs.push({ x: gap, y: 375, w: 22, h: 22, s: s });
+                obs.push({ x: gap + 160, y: 375, w: 22, h: 22, s: s });
+            } else {
+                obs.push({ x: gap, y: 355, w: 22, h: 42, s: s });
+                if(Math.random() < 0.3) items.push({ x: gap + 100, y: 180 });
             }
-            if(Math.random() < 0.15) items.push({ x: 1150, y: 180 + Math.random()*100 });
         }
 
         function loop() {
             if(isLive) {
-                let s = cfg.spd + (score/2500);
+                let s = cfg.spd + (score/3500); 
                 p.dy += cfg.grav; p.y += p.dy;
                 if(p.y > 350) { p.y = 350; p.dy = 0; p.jc = 0; }
                 if(p.inv > 0) p.inv--;
@@ -217,15 +216,14 @@
 
                 if(cfg.timer <= 0) {
                     spawnPattern(s);
-                    cfg.timer = (450 + Math.random() * 450) * (15/s);
+                    cfg.timer = (500 + Math.random() * 500) * (15/s);
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
-                    // --- [수정] 피격 판정 완화 (반 블록 정도의 여백 적용) ---
-                    // 캐릭터 크기가 40x45이므로, 상하좌우에 10px 정도의 여백(히트박스 축소)을 둠
-                    let px = p.x + 8, py = p.y + 8, pw = 24, ph = 29; 
-                    if(p.inv <= 0 && px < o.x + o.w && px + pw > o.x && py < o.y + o.h && py + ph > o.y) {
+                    // 인간 친화적 판정 (여백 10px)
+                    let hx = p.x + 10, hy = p.y + 10, hw = 20, hh = 25;
+                    if(p.inv <= 0 && hx < o.x + o.w && hx + hw > o.x && hy < o.y + o.h && hy + hh > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
                     }
@@ -238,7 +236,6 @@
                         if(p.hp < 3) p.hp++;
                         items.splice(i, 1);
                     }
-                    if(it.x < -100) items.splice(i, 1);
                 });
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
@@ -247,14 +244,14 @@
             ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 397, 900, 2);
             for(let i=0; i<3; i++) drawHeart(50+(i*35), 50, 15, "#ffcc00", i >= p.hp);
             
+            // 2단 점프 시 황금색 피드백
             ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0, 242, 255, 0.2)");
             ctx.fillRect(p.x, p.y, 40, 45);
             
             ctx.fillStyle = "#ff0077"; 
             obs.forEach(o => {
                 ctx.fillRect(o.x, o.y, o.w, o.h);
-                // 시각적 효과: 장애물 주변에 미세한 네온 광택
-                ctx.strokeStyle = "rgba(255, 0, 119, 0.5)";
+                ctx.strokeStyle = "rgba(255, 0, 119, 0.4)";
                 ctx.strokeRect(o.x-2, o.y-2, o.w+4, o.h+4);
             });
             items.forEach(it => drawHeart(it.x, it.y, 15, "#ffcc00", false));
