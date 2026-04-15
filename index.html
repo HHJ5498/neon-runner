@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner Smooth</title>
+    <title>Neon Runner High-Jump</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
@@ -13,15 +13,14 @@
         html, body { height: 100dvh; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
         body { display: flex; flex-direction: column; }
 
-        /* [수정] 레이아웃: 여백을 더 늘려 버튼이 절대 잘리지 않게 조정 */
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
-            background: var(--bg); padding: 10px; overflow: hidden;
+            background: var(--bg); padding: 5px; overflow: hidden;
         }
 
         #canvas-box {
             position: relative; width: 100%; max-width: 800px; 
-            max-height: 55vh; /* 높이를 더 제한하여 안전 확보 */
+            max-height: 55vh; 
             aspect-ratio: 2 / 1;
         }
 
@@ -33,7 +32,7 @@
             z-index: 1000; padding: 10px;
         }
 
-        #title { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 10px; text-shadow: 0 0 10px var(--gold); }
+        #title { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 10px; }
 
         .rank-list {
             width: 200px; background: rgba(255,255,255,0.05);
@@ -43,7 +42,7 @@
 
         .controls {
             width: 290px; background: rgba(255,255,255,0.03);
-            padding: 12px; border-radius: 12px; margin-bottom: 15px; pointer-events: auto;
+            padding: 12px; border-radius: 12px; margin-bottom: 15px;
         }
         .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; margin-bottom: 5px; }
         .badge { background: var(--gold); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
@@ -120,19 +119,18 @@
         const dBtn = document.querySelectorAll('.diff-btn'), dVal = document.getElementById('d-val');
 
         let isLive = false, score = 0, curLv = 2;
-        // x_base: 복귀할 기준 위치
         let p = { x: 100, x_base: 100, y: 350, dx: 0, dy: 0, jc: 0, hp: 3, inv: 0 };
-        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.0 };
+        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.2 }; // 중력 살짝 강화
 
         const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_smooth_v4') || "[0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_final_v5') || "[0,0,0]");
             rs.forEach((v, i) => { if(document.getElementById('r'+(i+1))) document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
             document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
         };
         const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_smooth_v4') || "[0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_final_v5') || "[0,0,0]");
             rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_smooth_v4', JSON.stringify(rs.slice(0,3)));
+            localStorage.setItem('nr_final_v5', JSON.stringify(rs.slice(0,3)));
             syncRanks();
         };
         syncRanks();
@@ -151,20 +149,21 @@
         startBtn.onclick = function(e) {
             e.stopPropagation();
             cfg.spd = parseInt(sInput.value);
-            const gMap = { 1:2.6, 2:3.0, 3:3.4, 4:3.8, 5:4.2 };
+            const gMap = { 1:2.8, 2:3.2, 3:3.6, 4:4.0, 5:4.5 };
             cfg.grav = gMap[curLv];
             p = { x: 100, x_base: 100, y: 350, dx: 0, dy: 0, jc: 0, hp: 3, inv: 0 };
-            obs = []; score = 0; isLive = true;
+            obs = []; score = 0; isLive = true; cfg.timer = 0; // 시작하자마자 나오도록
             ovl.style.display = 'none';
         };
 
-        // [수정] 점프: 추진력을 높이고 2단 점프 시 앞으로 더 튀어나가게 설정
+        // [수정] 점프: 2단 점프 시 위로 솟구치는 힘(dy) 대폭 강화
         const handleJump = (e) => {
             if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
             
             if(p.jc < 2) {
-                p.dy = (p.jc === 0) ? -32 : -28; 
-                p.dx = (p.jc === 0) ? 8 : 12; // 2단 점프 시 더 앞으로 돌진
+                // 1단: 높게(-33), 2단: 더 높게(-30) + 앞으로 돌진(dx)
+                p.dy = (p.jc === 0) ? -33 : -30; 
+                p.dx = (p.jc === 0) ? 9 : 14; 
                 p.jc++;
             }
         };
@@ -177,37 +176,34 @@
 
         function loop() {
             if(isLive) {
-                let s = cfg.spd + (score/3500); 
+                let s = cfg.spd + (score/2500); // 속도 증가폭 상향
                 p.dy += cfg.grav;
                 p.y += p.dy;
                 p.x += p.dx;
 
-                // [수정] 부드러운 복귀 로직
                 if(p.y >= 350) { 
-                    p.y = 350; 
-                    p.dy = 0; 
-                    p.jc = 0; 
-                    p.dx = 0;
-                    // 바닥에 닿으면 x_base(100) 좌표로 부드럽게 미끄러짐
-                    if(p.x > p.x_base) p.x -= 2; 
+                    p.y = 350; p.dy = 0; p.jc = 0; p.dx = 0;
+                    // 바닥 복귀 속도 상향
+                    if(p.x > p.x_base) p.x -= 3; 
                     if(p.x < p.x_base) p.x = p.x_base;
                 } else {
-                    // 공중에서는 속도에 따른 약간의 관성 저항
-                    p.dx *= 0.97;
+                    p.dx *= 0.98;
                 }
 
                 if(p.inv > 0) p.inv--;
-                score += s/10; cfg.timer -= s;
+                score += s/8; // 점수 획득량 상향
+                cfg.timer -= s;
 
+                // [수정] 장애물 출현 빈도 대폭 상향
                 if(cfg.timer <= 0) {
-                    let h = Math.random() > 0.6 ? 25 : 50;
+                    let h = Math.random() > 0.5 ? 25 : 55;
                     obs.push({ x: 950, y: 400-h, w: 25, h: h, s: s });
-                    cfg.timer = (400 + Math.random() * 500) * (15/s);
+                    // 타이머 간격을 줄여 장애물이 더 자주 나오게 함
+                    cfg.timer = (250 + Math.random() * 350) * (15/s);
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
-                    // 판정 최적화
                     if(p.inv <= 0 && p.x+10 < o.x+o.w && p.x+30 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
@@ -220,11 +216,9 @@
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
             ctx.strokeStyle = "#444"; ctx.lineWidth = 1; ctx.strokeRect(0, 400, 900, 1);
             
-            // HP 바 (간소화된 디자인)
             ctx.fillStyle = "#ffcc00";
             for(let i=0; i<p.hp; i++) ctx.fillRect(30+(i*25), 30, 15, 15);
             
-            // 캐릭터 (2단 점프 피드백)
             ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0,242,255,0.2)");
             ctx.fillRect(p.x, p.y, 40, 50);
             
