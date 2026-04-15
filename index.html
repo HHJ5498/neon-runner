@@ -5,36 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NEON DASH: UNIVERSAL</title>
     
+    <script src="cordova.js"></script>
+    
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
         html, body { 
-            height: 100%; margin: 0; padding: 0; background: #000; 
-            overflow: hidden; width: 100%; position: fixed; 
+            height: 100%; width: 100%; background: #000; 
+            overflow: hidden; position: fixed; 
             display: flex; flex-direction: column;
             user-select: none; -webkit-user-select: none;
         }
 
-        #game-view { 
-            position: relative; flex: 1; width: 100%; 
-            display: flex; background: #010103; overflow: hidden; 
-        }
-        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; }
+        #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #010103; overflow: hidden; }
+        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; background: #000; }
 
         #stat-bar { 
             width: 100%; height: 55px; background: #080808; border-top: 1px solid #333; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px; 
         }
 
         #ad-bottom-zone {
             width: 100%; height: 60px; background: #000;
-            display: flex; justify-content: center; align-items: center;
-            border-top: 1px solid #222;
-            padding-bottom: env(safe-area-inset-bottom);
+            display: flex; justify-content: center; align-items: center; border-top: 1px solid #222;
         }
 
         .label { font-size: 10px; color: #555; font-weight: bold; }
@@ -43,17 +39,15 @@
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); }
 
         .overlay { 
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); 
-            display: flex; flex-direction: column; justify-content: center; 
-            align-items: center; z-index: 2000;
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
         }
-        /* 💡 클릭과 터치 모두 가능하도록 수정 */
         .btn-start { 
-            background: var(--neon-blue); color: #000; padding: 12px 35px; 
-            font-size: 18px; font-weight: 900; border-radius: 50px; 
-            box-shadow: 0 0 15px var(--neon-blue); cursor: pointer;
+            background: var(--neon-blue); color: #000; padding: 15px 45px; 
+            font-size: 20px; font-weight: 900; border-radius: 50px; 
+            box-shadow: 0 0 20px var(--neon-blue); cursor: pointer; border: none;
         }
-        #title { color: #fff; font-size: 24px; margin-bottom: 15px; font-weight: 900; }
+        #title { color: #fff; font-size: 28px; margin-bottom: 20px; font-weight: 900; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -62,7 +56,7 @@
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
             <div id="title">NEON DASH</div>
-            <div class="btn-start" onclick="game.start(event)" ontouchstart="game.start(event)">게임 시작</div>
+            <button class="btn-start" id="start-btn">게임 시작</button>
         </div>
     </div>
 
@@ -77,9 +71,7 @@
              style="display:inline-block;width:320px;height:50px"
              data-ad-client="ca-pub-7503206245117361"
              data-ad-slot="9998817128"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
 <script>
@@ -89,8 +81,7 @@
 
     const game = {
         isLive: false, score: 0, gauge: 0, frame: 0, fever: false,
-        start(e) {
-            if(e) e.stopPropagation();
+        start() {
             this.isLive = true; this.score = 0; this.gauge = 0; this.frame = 0;
             p.y = 350; p.dy = 0; p.jCount = 0; obs = []; coins = [];
             document.getElementById('ovl').style.display = 'none';
@@ -105,18 +96,19 @@
     const p = { x: 120, y: 350, dy: 0, g: 1.4, j: -24, jCount: 0 };
     let obs = [], coins = [];
 
-    // 💡 입력 통합 처리 (터치 & 마우스 클릭)
-    function handleJump(e) {
-        if(!game.isLive || e.target.closest('.btn-start')) return;
-        if(p.jCount < 2) { 
-            p.dy = p.j; 
-            p.jCount++; 
-        }
-        if(e.cancelable) e.preventDefault();
-    }
+    // 💡 입력 이벤트 통합 (버튼 전용)
+    const startBtn = document.getElementById('start-btn');
+    const onStart = (e) => { e.preventDefault(); e.stopPropagation(); game.start(); };
+    startBtn.addEventListener('click', onStart);
+    startBtn.addEventListener('touchstart', onStart);
 
+    // 💡 점프 이벤트 통합 (화면 전체)
+    function handleJump(e) {
+        if(!game.isLive || e.target.id === 'start-btn') return;
+        if(p.jCount < 2) { p.dy = p.j; p.jCount++; }
+    }
+    window.addEventListener('mousedown', handleJump);
     window.addEventListener('touchstart', handleJump, { passive: false });
-    window.addEventListener('mousedown', handleJump); // PC용 추가
 
     function update() {
         if(!game.isLive) return;
