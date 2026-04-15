@@ -17,9 +17,7 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.9);
         }
 
-        @media (max-width: 600px) {
-            #canvas-box { max-width: 100%; height: 85vh; } 
-        }
+        @media (max-width: 600px) { #canvas-box { max-width: 100%; height: 85vh; } }
 
         canvas { width: 100%; height: 100%; display: block; }
 
@@ -66,40 +64,37 @@
     const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
 
     let isLive = false, score = 0, isMobile;
-    let p, obs = [], cfg;
+    let p, obs = [], cfg, isPressing = false;
 
     function initEnv() {
         isMobile = window.innerWidth <= 600;
         cvs.width = isMobile ? 600 : 1200;
         cvs.height = isMobile ? 1000 : 600; 
-        
         const gY = cvs.height - 100;
         
         p = { 
-            x: isMobile ? 80 : 180, 
-            startX: isMobile ? 80 : 180, // 포물선 시작점 기억
+            x: isMobile ? 100 : 200, 
             y: gY - 60, 
             dy: 0, 
             jc: 0, 
             hp: 3, 
             inv: 0,
-            w: 45, 
-            h: 60 
+            w: 45, h: 60 
         };
 
         cfg = { 
             spd: isMobile ? 8 : 10,  
             baseSpd: isMobile ? 8 : 10,
-            grav: isMobile ? 4.3 : 4.6, 
-            jump: isMobile ? -62 : -65, 
-            next: 0, 
-            gap: isMobile ? 750 : 950 
+            grav: isMobile ? 3.5 : 4.0, 
+            jumpForce: isMobile ? -22 : -25, // 기본 점프 힘
+            maxJump: isMobile ? -55 : -60,  // 꾹 눌렀을 때 최대 속도
+            next: 0, gap: isMobile ? 750 : 950 
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_vVisionTrain') || "[]");
+        const ranks = JSON.parse(localStorage.getItem('neon_vFlexJump') || "[]");
         const list = document.querySelector('#ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
@@ -116,29 +111,34 @@
         ovl.style.display = 'none';
     };
 
-    const handleAction = (e) => {
-        if(!isLive) return;
+    // [핵심 수정] 누르고 있는 동안 상승하는 로직
+    const startJump = (e) => {
+        if(!isLive || e.target === startBtn) return;
+        isPressing = true;
         if(p.jc < 2) { 
-            p.dy = cfg.jump; 
+            p.dy = cfg.jumpForce; 
             p.jc++; 
         }
     };
-    window.addEventListener('pointerdown', handleAction);
+    const endJump = () => { isPressing = false; };
+
+    window.addEventListener('pointerdown', startJump);
+    window.addEventListener('pointerup', endJump);
+    window.addEventListener('pointercancel', endJump);
 
     function loop() {
         const gY = cvs.height - 100;
         if(isLive) {
             cfg.spd += 0.0018; 
+            
+            // [가변 점프 물리] 누르고 있으면 위로 더 힘을 받음 (최대치까지)
+            if(isPressing && p.dy < 0) {
+                p.dy += cfg.jumpForce * 0.15; // 누르는 동안 가속도 추가
+                if(p.dy < cfg.maxJump) p.dy = cfg.maxJump;
+            }
+
             p.dy += cfg.grav; 
             p.y += p.dy;
-
-            // [포물선 로직] 공중에 떠 있을 때 캐릭터 위치를 아주 살짝 앞으로 밀어줌
-            if(p.y < gY - p.h) {
-                // 점프 중일 때 원래 위치보다 최대 40px 정도 앞으로 이동
-                p.x = p.startX + (Math.abs(p.dy) * 0.8);
-            } else {
-                p.x = p.startX; // 착지하면 원래 위치로 복귀
-            }
 
             if(p.y < 0) { p.y = 0; p.dy = 0; }
             if(p.y >= gY - p.h) { 
@@ -159,14 +159,14 @@
 
             obs.forEach((o, i) => {
                 o.x -= cfg.spd;
-                // 판정 범위를 8px 정도 줄여서 포물선 점프 시 더 쾌적하게 피하도록 조정
-                if(p.inv <= 0 && p.x + 8 < o.x + o.w && p.x + p.w - 8 > o.x && p.y + 8 < o.y + o.h && p.y + p.h - 5 > o.y) {
+                if(p.inv <= 0 && p.x + 10 < o.x + o.w && p.x + p.w - 10 > o.x && p.y + 10 < o.y + o.h && p.y + p.h - 5 > o.y) {
                     p.hp--; p.inv = 60;
                     if(p.hp <= 0) {
                         isLive = false;
-                        let r = JSON.parse(localStorage.getItem('neon_vVisionTrain') || "[]");
+                        isPressing = false;
+                        let r = JSON.parse(localStorage.getItem('neon_vFlexJump') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_vVisionTrain', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_vFlexJump', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
