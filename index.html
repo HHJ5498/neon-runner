@@ -7,20 +7,26 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: none; }
         html, body { height: 100%; width: 100%; background: #000; font-family: sans-serif; overflow: hidden; }
         body { display: flex; flex-direction: column; }
 
-        #game-area { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; background: var(--bg); padding: 10px; }
+        #game-area { flex: 1; position: relative; background: var(--bg); display: flex; justify-content: center; align-items: center; }
+        
+        /* [핵심] PC와 모바일 캔버스 크기 대응 */
         #canvas-box { 
-            position: relative; width: 100%; max-width: 900px; height: 500px; 
-            background: #000; border: 2px solid #333; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.9);
+            position: relative; 
+            width: 100%; height: 100%; 
+            max-width: 1200px; max-height: 600px; /* PC 기본 가로형 */
+            background: #000; overflow: hidden;
         }
 
-        @media (max-width: 600px) { #canvas-box { max-width: 100%; height: 85vh; } }
+        /* 모바일(세로 방향)일 때 디자인 변경 */
+        @media (max-aspect-ratio: 1/1) {
+            #canvas-box { max-width: 100%; max-height: 100%; }
+        }
 
-        canvas { width: 100%; height: 100%; display: block; }
+        canvas { width: 100%; height: 100%; display: block; object-fit: contain; }
 
         #ovl { 
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); 
@@ -30,13 +36,13 @@
         #title { font-size: 28px; font-weight: 900; color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 20px var(--gold); text-align: center; }
         #ranking-box { width: 240px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px solid #444; }
         .rank-item { display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0; color: #eee; font-family: monospace; }
-        .btn-start { background: var(--gold); color: #000; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-start { background: var(--gold); color: #000; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; }
 
         #stat-bar { height: 55px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; font-weight: bold; }
         #ad-box { height: 75px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
     <div id="game-area">
         <div id="canvas-box">
@@ -55,57 +61,52 @@
     </div>
 
     <div id="ad-box">
-        <ins class="adsbygoogle"
-             style="display:block; width:320px; height:50px"
-             data-ad-client="ca-pub-7503206245117361"
-             data-ad-slot="9285335402"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
+        <ins class="adsbygoogle" style="display:block; width:320px; height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9285335402"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
     <script>
     const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
     const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
 
-    let isLive = false, score = 0, isMobile;
+    let isLive = false, score = 0;
     let p, obs = [], cfg, isPressing = false;
 
     function initEnv() {
-        isMobile = window.innerWidth <= 600;
-        cvs.width = isMobile ? 600 : 1200;
-        cvs.height = isMobile ? 1000 : 600; 
-        const gY = cvs.height - 100;
+        const isPortrait = window.innerHeight > window.innerWidth;
+        
+        // PC(가로)면 가로형 해상도, 모바일(세로)이면 세로형 해상도 적용
+        cvs.width = isPortrait ? 720 : 1200;
+        cvs.height = isPortrait ? 1280 : 600; 
+        
+        const gY = cvs.height - (isPortrait ? 200 : 100);
         
         p = { 
-            x: isMobile ? 100 : 200, 
-            y: gY - 60, 
-            dy: 0, 
-            jc: 0, 
-            hp: 3, 
-            inv: 0,
-            w: 45, h: 60 
+            x: isPortrait ? 120 : 200, 
+            y: gY - 80, 
+            dy: 0, jc: 0, hp: 3, inv: 0,
+            w: isPortrait ? 60 : 45, 
+            h: isPortrait ? 80 : 60 
         };
 
         cfg = { 
-            spd: isMobile ? 8 : 10,  
-            baseSpd: isMobile ? 8 : 10,
-            grav: isMobile ? 3.5 : 4.0, 
-            jumpForce: isMobile ? -22 : -25, 
-            maxJump: isMobile ? -55 : -60,  
-            next: 0, gap: isMobile ? 750 : 950 
+            spd: isPortrait ? 12 : 10,  
+            baseSpd: isPortrait ? 12 : 10,
+            grav: isPortrait ? 4.2 : 4.0, 
+            jumpForce: isPortrait ? -28 : -25, 
+            maxJump: isPortrait ? -75 : -60,  
+            next: 0, gap: isPortrait ? 850 : 950 
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_vFinalAd') || "[]");
+        const ranks = JSON.parse(localStorage.getItem('neon_vResponsive') || "[]");
         const list = document.querySelector('#ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
             list.innerHTML += `<div class="rank-item"><span>${i+1}ST</span><span>${Math.floor(s)}</span></div>`;
         });
-        if(ranks.length === 0) list.innerHTML += '<div style="text-align:center;opacity:0.5;font-size:12px;">기록 없음</div>';
         document.getElementById('top-score').innerText = "TOP: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
     }
 
@@ -119,44 +120,35 @@
     const startJump = (e) => {
         if(!isLive || e.target === startBtn) return;
         isPressing = true;
-        if(p.jc < 2) { 
-            p.dy = cfg.jumpForce; 
-            p.jc++; 
-        }
+        if(p.jc < 2) { p.dy = cfg.jumpForce; p.jc++; }
     };
     const endJump = () => { isPressing = false; };
 
     window.addEventListener('pointerdown', startJump);
     window.addEventListener('pointerup', endJump);
-    window.addEventListener('pointercancel', endJump);
 
     function loop() {
-        const gY = cvs.height - 100;
+        const isPortrait = cvs.height > cvs.width;
+        const gY = cvs.height - (isPortrait ? 200 : 100);
+
         if(isLive) {
             cfg.spd += 0.0018; 
-            
-            // 가변 점프 로직: 누르고 있으면 추가 상승
             if(isPressing && p.dy < 0) {
                 p.dy += cfg.jumpForce * 0.15;
                 if(p.dy < cfg.maxJump) p.dy = cfg.maxJump;
             }
-
             p.dy += cfg.grav; 
             p.y += p.dy;
 
             if(p.y < 0) { p.y = 0; p.dy = 0; }
-            if(p.y >= gY - p.h) { 
-                p.y = gY - p.h; 
-                p.dy = 0; 
-                p.jc = 0; 
-            }
+            if(p.y >= gY - p.h) { p.y = gY - p.h; p.dy = 0; p.jc = 0; }
 
             score += cfg.spd / 10;
             cfg.next -= cfg.spd;
 
             if(cfg.next <= 0) {
-                let h = Math.random() > 0.7 ? 40 : 80; 
-                obs.push({ x: cvs.width + 100, y: gY - h, w: 35, h: h });
+                let h = isPortrait ? (Math.random() > 0.7 ? 60 : 120) : (Math.random() > 0.7 ? 40 : 80); 
+                obs.push({ x: cvs.width + 100, y: gY - h, w: isPortrait ? 50 : 35, h: h });
                 let currentGap = cfg.gap * (cfg.baseSpd / cfg.spd);
                 cfg.next = (Math.max(currentGap, 400) + Math.random() * 300);
             }
@@ -166,11 +158,10 @@
                 if(p.inv <= 0 && p.x + 10 < o.x + o.w && p.x + p.w - 10 > o.x && p.y + 10 < o.y + o.h && p.y + p.h - 5 > o.y) {
                     p.hp--; p.inv = 60;
                     if(p.hp <= 0) {
-                        isLive = false;
-                        isPressing = false;
-                        let r = JSON.parse(localStorage.getItem('neon_vFinalAd') || "[]");
+                        isLive = false; isPressing = false;
+                        let r = JSON.parse(localStorage.getItem('neon_vResponsive') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_vFinalAd', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_vResponsive', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
@@ -182,7 +173,7 @@
         }
 
         ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, cvs.width, cvs.height);
-        ctx.strokeStyle = "#444"; ctx.lineWidth = 5;
+        ctx.strokeStyle = "#444"; ctx.lineWidth = isPortrait ? 10 : 5;
         ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(cvs.width, gY); ctx.stroke();
         
         ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
@@ -191,7 +182,7 @@
         ctx.shadowBlur = 0;
 
         ctx.fillStyle = "#ffcc00";
-        for(let i=0; i<p.hp; i++) ctx.fillRect(25 + (i*30), 25, 18, 18);
+        for(let i=0; i<p.hp; i++) ctx.fillRect(isPortrait ? 35+(i*45) : 25+(i*30), isPortrait ? 40 : 25, isPortrait?25:18, isPortrait?25:18);
 
         ctx.fillStyle = "#ff0077";
         obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
@@ -202,6 +193,9 @@
     initEnv();
     updateRank();
     loop();
+
+    // 화면 크기 바뀔 때 대응
+    window.addEventListener('resize', initEnv);
     </script>
 </body>
 </html>
