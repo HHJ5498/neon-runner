@@ -3,29 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: BALANCED PHYSICS</title>
+    <title>NEON DASH: SMART ENGINE</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; position: fixed; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; }
+        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; user-select: none; }
         #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #010103; overflow: hidden; }
         canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; background: #000; z-index: 1; }
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        #title { color: #fff; font-size: 36px; margin-bottom: 30px; font-weight: 900; text-shadow: 0 0 15px var(--neon-blue); }
-        .settings-box { background: #111; padding: 25px; border-radius: 20px; border: 2px solid var(--neon-blue); margin-bottom: 30px; width: 300px; text-align: center; }
-        .settings-box label { color: #fff; font-size: 16px; display: block; margin-bottom: 15px; font-weight: bold; }
-        #speed-slider { width: 100%; height: 10px; border-radius: 5px; background: #333; outline: none; cursor: pointer; accent-color: var(--neon-blue); }
-        #speed-display { color: var(--neon-blue); font-size: 24px; font-weight: 900; display: inline-block; margin-top: 10px; }
-        .btn-start { background: var(--neon-blue); color: #000; padding: 18px 70px; font-size: 24px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; }
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        #title { color: #fff; font-size: 32px; margin-bottom: 20px; font-weight: 900; text-shadow: 0 0 15px var(--neon-blue); }
+        .settings-box { background: #111; padding: 20px; border-radius: 20px; border: 2px solid var(--neon-blue); margin-bottom: 25px; width: 280px; text-align: center; }
+        .settings-box label { color: #aaa; font-size: 13px; display: block; margin-bottom: 10px; font-weight: bold; }
+        #speed-slider { width: 100%; cursor: pointer; accent-color: var(--neon-blue); }
+        #speed-display { color: var(--neon-blue); font-size: 24px; font-weight: 900; }
+        .btn-start { background: var(--neon-blue); color: #000; padding: 15px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px var(--neon-blue); }
         #stat-bar { width: 100%; height: 55px; background: #080808; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
-        .label { font-size: 10px; color: #555; font-weight: bold; }
         .val { color: white; font-size: 16px; font-weight: 900; }
-        .fever-wrap { width: 60px; height: 8px; background: #111; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
+        .fever-wrap { width: 60px; height: 8px; background: #111; border-radius: 4px; overflow: hidden; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); }
-        #ad-bottom-zone { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -33,30 +31,23 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div id="title">NEON DASH</div>
+            <div id="title">NEON DASH AI</div>
             <div class="settings-box">
-                <label>SPEED CUSTOMIZER</label>
+                <label>BASE DIFFICULTY (SPEED)</label>
                 <input type="range" id="speed-slider" min="1" max="16" value="10">
                 <div id="speed-display">10</div>
             </div>
-            <button class="btn-start" id="start-btn">START</button>
+            <button class="btn-start" id="start-btn">RUN ENGINE</button>
         </div>
     </div>
 
     <div id="stat-bar">
-        <div><div class="label">SCORE</div><div id="score" class="val">0</div></div>
-        <div><div class="label">FEVER</div><div class="fever-wrap"><div id="fever-fill"></div></div></div>
-        <div><div class="label">ENERGY</div><div id="coins" class="val" style="color:var(--gold);">0%</div></div>
+        <div><div id="score" class="val">0</div></div>
+        <div class="fever-wrap"><div id="fever-fill"></div></div>
+        <div><div id="coins" class="val" style="color:var(--gold);">0%</div></div>
     </div>
 
-    <div id="ad-bottom-zone">
-        <ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9998817128"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-
-    <script src="cordova.js" async></script>
-
-<script>
+    <script>
     const cvs = document.getElementById('cvs');
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
@@ -64,102 +55,99 @@
     const slider = document.getElementById('speed-slider');
     const display = document.getElementById('speed-display');
     
-    // 💡 물리 파라미터 셋팅
-    let config = {
-        baseSpeed: 10,
-        jumpPower: -24, // 중간 정도의 일정한 점프력
-        gravity: 1.3,
-        spawnRate: 40
-    };
-
-    slider.oninput = function() {
-        const val = parseInt(this.value);
-        display.innerText = val;
-        config.baseSpeed = val;
-        
-        // 💡 핵심 로직 적용
-        if (val >= 10) {
-            // [높은 속도] 낮은 체공시간 (중력 강화)
-            config.gravity = 1.4 + (val * 0.03); 
-            config.jumpPower = -22 - (val * 0.3); // 속도에 맞춰 살짝만 보정
-        } else {
-            // [낮은 속도] 높은 체공시간 (중력 약화)
-            config.gravity = 0.8 + (val * 0.04);
-            config.jumpPower = -20 - (val * 0.2); 
-        }
-        
-        config.spawnRate = Math.max(15, 60 - (val * 2));
-    };
+    let config = { baseSpeed: 10, jumpPower: -24, gravity: 1.3, spawnTimer: 0 };
+    slider.oninput = function() { config.baseSpeed = parseInt(this.value); display.innerText = this.value; };
 
     const game = {
-        isLive: false, score: 0, gauge: 0, frame: 0, fever: false,
+        isLive: false, score: 0, gauge: 0, fever: false,
+        patterns: [
+            { name: 'Single', gap: 60, items: [350] },
+            { name: 'Double', gap: 40, items: [350, 350] },
+            { name: 'HighLow', gap: 50, items: [350, 200] },
+            { name: 'Stair', gap: 35, items: [350, 250, 150] }
+        ],
         start() {
-            this.isLive = true; this.score = 0; this.gauge = 0; this.frame = 0;
-            p.y = 350; p.dy = 0; p.jCount = 0; 
-            p.j = config.jumpPower; 
-            p.g = config.gravity;
-            obs = []; coins = [];
+            this.isLive = true; this.score = 0; this.gauge = 0;
+            p.y = 350; p.dy = 0; p.jCount = 0; obs = []; coins = [];
             document.getElementById('ovl').style.display = 'none';
-        },
-        end() {
-            this.isLive = false;
-            document.getElementById('title').innerText = "GAME OVER";
-            document.getElementById('ovl').style.display = 'flex';
         }
     };
 
     const p = { x: 120, y: 350, dy: 0, g: 1.3, j: -24, jCount: 0 };
     let obs = [], coins = [];
 
-    const btn = document.getElementById('start-btn');
-    btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); game.start(); };
-
-    function handleAction(e) {
-        if (!game.isLive || e.target.id === 'speed-slider' || e.target.id === 'start-btn') return;
-        if (p.jCount < 2) { p.dy = p.j; p.jCount++; }
+    // 💡 스마트 점프 엔진: 속도에 따라 중력과 점프력을 실시간 동적 계산
+    function syncPhysics(speed) {
+        // 속도가 빨라질수록 체공시간을 줄여야 함 -> 중력을 높임
+        p.g = 0.8 + (speed * 0.06); 
+        // 속도에 상관없이 일정한 높이를 뛰도록 점프력 보정
+        p.j = -(16 + (speed * 0.8)); 
     }
 
+    // 💡 스마트 장애물 엔진: 단순 랜덤이 아닌 패턴화된 위험 요소 생성
+    function spawnPattern(speed) {
+        const pattern = game.patterns[Math.floor(Math.random() * game.patterns.length)];
+        pattern.items.forEach((yPos, index) => {
+            setTimeout(() => {
+                if(game.isLive && !game.fever) {
+                    obs.push({ x: 950, y: yPos, s: speed });
+                }
+            }, index * (pattern.gap * 10 / speed)); // 속도에 맞춰 패턴 간격도 압축
+        });
+    }
+
+    const btn = document.getElementById('start-btn');
+    btn.onclick = () => game.start();
+
+    function handleAction() {
+        if (!game.isLive) return;
+        if (p.jCount < 2) { p.dy = p.j; p.jCount++; }
+    }
     window.addEventListener('mousedown', handleAction);
-    window.addEventListener('touchstart', (e) => { handleAction(e); }, { passive: false });
+    window.addEventListener('touchstart', handleAction);
 
     function update() {
         if(!game.isLive) return;
-        game.frame++;
         
-        let currentSpeed = (config.baseSpeed + (game.score/1500)) * (game.fever ? 1.5 : 1); 
-        game.score += currentSpeed / 12;
+        let currentSpeed = (config.baseSpeed + (game.score/1000)) * (game.fever ? 1.4 : 1);
+        syncPhysics(currentSpeed); // 매 프레임 물리 엔진 동기화
         
+        game.score += currentSpeed / 15;
         p.dy += p.g; p.y += p.dy;
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
 
-        if(!game.fever) {
-            if(game.frame % config.spawnRate === 0) {
-                obs.push({ x: 950, y: Math.random() > 0.5 ? 350 : 200, s: currentSpeed });
-            }
-            if(game.frame % 38 === 0) {
-                coins.push({ x: 950, y: 150 + Math.random() * 200 });
-            }
-        } else {
-            game.gauge -= 0.6;
-            if(game.gauge <= 0) game.fever = false;
+        // 패턴 생성 타이머
+        config.spawnTimer -= currentSpeed;
+        if(config.spawnTimer <= 0 && !game.fever) {
+            spawnPattern(currentSpeed);
+            config.spawnTimer = 250 + Math.random() * 200; // 다음 패턴까지의 거리
         }
+
+        if(game.frame % 40 === 0) coins.push({ x: 950, y: 150 + Math.random() * 200 });
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            if(!game.fever && Math.abs(p.x - o.x) < 28 && Math.abs(p.y - o.y) < 32) game.end();
+            // 스마트 히트박스: 속도가 빠를수록 판정을 미세하게 너그럽게 조정
+            let margin = currentSpeed > 15 ? 5 : 0;
+            if(!game.fever && Math.abs(p.x - o.x) < (28 - margin) && Math.abs(p.y - o.y) < (32 - margin)) {
+                game.isLive = false;
+                document.getElementById('ovl').style.display = 'flex';
+            }
             if(o.x < -100) obs.splice(i, 1);
         });
 
         coins.forEach((c, i) => {
             c.x -= currentSpeed;
-            if(game.fever) { c.x += (p.x - c.x) * 0.22; c.y += (p.y - c.y) * 0.22; }
-            if(Math.abs(p.x - c.x) < 55 && Math.abs(p.y - c.y) < 55) {
+            if(game.fever) { c.x += (p.x - c.x) * 0.2; c.y += (p.y - c.y) * 0.2; }
+            if(Math.abs(p.x - c.x) < 50 && Math.abs(p.y - c.y) < 50) {
                 coins.splice(i, 1);
                 game.gauge = Math.min(100, game.gauge + 10);
                 if(game.gauge >= 100 && !game.fever) game.fever = true;
             }
             if(c.x < -100) coins.splice(i, 1);
         });
+
+        if(game.fever) { game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false; }
 
         document.getElementById('score').innerText = Math.floor(game.score);
         document.getElementById('coins').innerText = Math.floor(game.gauge) + "%";
@@ -180,6 +168,6 @@
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
     loop();
-</script>
+    </script>
 </body>
 </html>
