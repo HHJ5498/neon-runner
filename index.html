@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: AI FIX</title>
+    <title>NEON DASH: 3 LIVES</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
-        :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; --red: #ff3300; }
+        :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; --heart: #ff3366; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body { 
@@ -21,73 +21,70 @@
         #game-view { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; background: #050508; overflow: hidden; }
         canvas { max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1; touch-action: none; background: #050508; }
         
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.94); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; overflow-y: auto; }
-        .scroll-hint { font-size: 11px; color: var(--neon); margin-bottom: 5px; animation: bounce 1.5s infinite; }
+        /* UI 레이어 */
+        #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 10; display: flex; gap: 8px; pointer-events: none; }
+        .heart-ui { width: 25px; height: 25px; fill: var(--heart); filter: drop-shadow(0 0 5px var(--heart)); transition: 0.3s; }
+        .heart-empty { fill: #333; filter: none; }
+
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; overflow-y: auto; }
+        .scroll-hint { font-size: 11px; color: var(--neon); margin-bottom: 8px; animation: bounce 1.5s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
         
-        #title { font-size: 28px; font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 15px; }
+        #title { font-size: clamp(24px, 7vw, 36px); font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 20px; }
         
-        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 320px; }
-        .mode-btn { flex: 1; padding: 12px; border: 1px solid #444; background: #111; color: #888; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
-        .mode-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(0, 242, 255, 0.1); }
-        .mode-btn.vs-active { border-color: var(--red); color: var(--red); background: rgba(255, 51, 0, 0.1); }
-
-        .settings-box { background: #111; padding: 15px; border-radius: 15px; border: 1px solid #333; width: 100%; max-width: 320px; margin-bottom: 12px; }
-        .setting-item { margin-bottom: 10px; }
+        .settings-box { background: #111; padding: 18px; border-radius: 15px; border: 1px solid var(--neon); width: 100%; max-width: 320px; margin-bottom: 15px; }
+        .setting-item { margin-bottom: 12px; }
         .setting-item label { color: #888; font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px; text-align: left; }
-        input[type="range"] { width: 100%; height: 25px; cursor: pointer; accent-color: var(--neon); }
-        .val-display { color: var(--neon); font-size: 16px; font-weight: 900; }
+        input[type="range"] { width: 100%; height: 30px; cursor: pointer; accent-color: var(--neon); }
+        .val-display { color: var(--neon); font-size: 16px; font-weight: 900; text-align: right; }
 
-        .rank-box { width: 100%; max-width: 320px; background: #0a0a0a; border: 1px solid #222; border-radius: 12px; padding: 10px; margin-bottom: 12px; }
-        .rank-title { color: var(--gold); font-size: 12px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #222; }
-        #rank-list { list-style: none; text-align: left; font-size: 12px; }
-        #rank-list li { display: flex; justify-content: space-between; padding: 2px 5px; color: #ccc; }
+        .rank-box { width: 100%; max-width: 320px; background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
+        .rank-title { color: var(--gold); font-size: 13px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #222; }
+        #rank-list { list-style: none; text-align: left; font-size: 13px; }
+        #rank-list li { display: flex; justify-content: space-between; padding: 4px 5px; color: #ccc; }
 
-        .btn-start { background: var(--neon); color: #000; padding: 14px 60px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
+        .btn-start { background: var(--neon); color: #000; padding: 16px 70px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
 
-        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
+        #stat-bar { width: 100%; height: 55px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; }
         #ad-area { width: 100%; min-height: 55px; background: #000; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
 
     <div id="game-view">
-        <canvas id="cvs"></canvas>
+        <div id="ui-layer"></div> <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div class="scroll-hint">▼ 설정 및 모드 선택</div>
+            <div class="scroll-hint">▼ 설정 변경 (아래로 스크롤)</div>
             <div id="title">NEON DASH AI</div>
             
-            <div class="mode-selector">
-                <button id="btn-solo" class="mode-btn active">기본 모드</button>
-                <button id="btn-vs" class="mode-btn">AI 대결 모드</button>
-            </div>
-
             <div class="rank-box">
-                <div class="rank-title">🏆 TOP 5 랭킹</div>
+                <div class="rank-title">🏆 TOP 5 기록</div>
                 <ul id="rank-list"></ul>
             </div>
 
             <div class="settings-box">
                 <div class="setting-item">
-                    <label>속도 조절 (1-24)</label>
+                    <label>엔진 속도 (1-24)</label>
                     <input type="range" id="speed-slider" min="1" max="24" value="10">
                     <div id="speed-display" class="val-display">10</div>
                 </div>
                 <div class="setting-item">
-                    <label>장애물 크기 (5-40px)</label>
+                    <label>장애물 규격 (5-40px)</label>
                     <input type="range" id="size-slider" min="5" max="40" value="15">
                     <div id="size-display" class="val-display">15px</div>
                 </div>
             </div>
             
-            <button class="btn-start" id="start-btn">게임 시작</button>
+            <button class="btn-start" id="start-btn">엔진 가동</button>
         </div>
     </div>
 
     <div id="stat-bar">
-        <div id="score-txt" style="font-weight:900; font-size:14px;">SCORE: 0</div>
-        <div id="vs-status" style="color:var(--red); font-weight:bold; font-size:11px; display:none;">AI 준비완료</div>
-        <div id="best-txt" style="color:var(--gold); font-size:14px;">BEST: 0</div>
+        <div id="score-txt" style="font-weight:900;">SCORE: 0</div>
+        <div style="width: 80px; height: 8px; background: #222; border-radius: 4px; overflow: hidden;">
+            <div id="f-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #ff0077);"></div>
+        </div>
+        <div id="best-txt" style="color:var(--gold);">BEST: 0</div>
     </div>
 
     <div id="ad-area">
@@ -103,19 +100,27 @@
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
-    const COLORS = { neon: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508', red: '#ff3300' };
+    const COLORS = { neon: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508', heart: '#ff3366' };
     const sSpeed = document.getElementById('speed-slider'), sSize = document.getElementById('size-slider');
     const dSpeed = document.getElementById('speed-display'), dSize = document.getElementById('size-display');
-    const ovl = document.getElementById('ovl'), btnSolo = document.getElementById('btn-solo'), btnVs = document.getElementById('btn-vs');
+    const ovl = document.getElementById('ovl'), uiLayer = document.getElementById('ui-layer');
 
-    let config = { baseSpeed: 10, obsSize: 15, timer: 0, mode: 'solo' };
-    let p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: false };
-    let bot = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: false }; 
-    let obs = [], coins = [], isLive = false, score = 0, gauge = 0, isFever = false;
+    let config = { baseSpeed: 10, obsSize: 15, timer: 0 };
+    let player = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, hp: 3, invul: 0 };
+    let obs = [], coins = [], hearts = [], isLive = false, score = 0, gauge = 0, isFever = false;
 
-    // 모드 선택 버튼 이벤트
-    btnSolo.onclick = () => { config.mode = 'solo'; btnSolo.classList.add('active'); btnVs.classList.remove('vs-active'); };
-    btnVs.onclick = () => { config.mode = 'vs'; btnVs.classList.add('vs-active'); btnSolo.classList.remove('active'); };
+    // 하트 UI 업데이트
+    function updateHeartUI() {
+        uiLayer.innerHTML = '';
+        for(let i=0; i<3; i++) {
+            const h = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            h.setAttribute("viewBox", "0 0 24 24");
+            h.classList.add("heart-ui");
+            if(i >= player.hp) h.classList.add("heart-empty");
+            h.innerHTML = '<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>';
+            uiLayer.appendChild(h);
+        }
+    }
 
     function updateRankBoard() {
         let ranks = JSON.parse(localStorage.getItem('neon_ranks') || '[]');
@@ -128,15 +133,11 @@
     sSize.oninput = () => { config.obsSize = parseInt(sSize.value); dSize.innerText = sSize.value + "px"; };
 
     function startGame() {
-        // 물리 및 상태 초기화 (멈춤 현상 방지)
-        isLive = true; score = 0; gauge = 0; isFever = false; obs = []; coins = []; config.timer = 100;
-        
-        p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: true };
-        bot = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: (config.mode === 'vs') };
-        
+        isLive = true; score = 0; gauge = 0; isFever = false;
+        player.y = 350; player.dy = 0; player.jCount = 0; player.hp = 3; player.invul = 0;
+        obs = []; coins = []; hearts = []; config.timer = 100;
+        updateHeartUI();
         ovl.style.display = 'none';
-        document.getElementById('vs-status').style.display = bot.alive ? 'block' : 'none';
-        document.getElementById('vs-status').innerText = "AI 추격 중";
     }
 
     function gameOver() {
@@ -146,23 +147,17 @@
         ranks.sort((a,b) => b - a);
         localStorage.setItem('neon_ranks', JSON.stringify(ranks.slice(0, 10)));
         updateRankBoard();
-        document.getElementById('title').innerText = p.alive ? "AI 승리!" : "게임 종료";
+        document.getElementById('title').innerText = "SYSTEM FAILED";
         ovl.style.display = 'flex';
     }
 
-    function applyAIPhysics(s) {
-        let gravity = 0.8 + (s * 0.045);
-        let j1 = -(16.5 + (s * 0.72));
-        return { g: gravity, j1: j1, j2: j1 * 0.85 };
-    }
-
     function handleInput(e) {
-        if (!isLive || e.target.closest('.settings-box') || e.target.closest('.mode-selector')) return;
-        if (p.alive && p.jCount < 2) {
+        if (!isLive || e.target.closest('.settings-box')) return;
+        if (player.jCount < 2) {
             let s = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
-            const f = applyAIPhysics(s);
-            p.dy = (p.jCount === 0) ? f.j1 : f.j2;
-            p.jCount++;
+            let force = -(16.5 + (s * 0.72));
+            player.dy = (player.jCount === 0) ? force : force * 0.85;
+            player.jCount++;
         }
         if(e.cancelable) e.preventDefault();
     }
@@ -174,33 +169,12 @@
     function update() {
         if(!isLive) return;
         let s = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
-        const f = applyAIPhysics(s);
+        player.g = 0.8 + (s * 0.045);
         score += s / 15;
+        player.dy += player.g; player.y += player.dy;
+        if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
+        if(player.invul > 0) player.invul--;
 
-        // 플레이어 처리
-        if(p.alive) {
-            p.g = f.g; p.dy += p.g; p.y += p.dy;
-            if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
-        }
-
-        // AI 봇 처리 (장애물 감지 안정화)
-        if(bot.alive) {
-            bot.g = f.g; bot.dy += bot.g; bot.y += bot.dy;
-            if(bot.y > 350) { bot.y = 350; bot.dy = 0; bot.jCount = 0; }
-
-            if (obs.length > 0) {
-                let nextObs = obs[0]; // 가장 가까운 장애물
-                let dist = nextObs.x - bot.x;
-                if(dist > 0 && dist < (160 + s * 4) && bot.jCount === 0) {
-                    bot.dy = f.j1; bot.jCount++;
-                }
-                if(dist > 0 && dist < 90 && nextObs.y < 300 && bot.jCount === 1) {
-                    bot.dy = f.j2; bot.jCount++;
-                }
-            }
-        }
-
-        // 장애물 스폰
         config.timer -= s;
         if(config.timer <= 0 && !isFever) {
             let py = Math.random() > 0.45 ? 395 : 240;
@@ -208,35 +182,42 @@
             config.timer = (280 + Math.random() * 200) * (10 / s + 0.5);
         }
 
-        // 코인 스폰
         if(Math.random() < 0.02) coins.push({ x: 950, y: 180 + Math.random() * 180 });
+        // 하트 아이템 스폰 (매우 낮은 확률)
+        if(Math.random() < 0.0015 && player.hp < 3) hearts.push({ x: 950, y: 200 + Math.random() * 100 });
 
-        // 충돌 및 수거 로직
         obs.forEach((o, i) => {
             o.x -= o.s;
-            if(p.alive && !isFever && Math.abs((p.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((p.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
-                p.alive = false; if(!bot.alive) gameOver();
-            }
-            if(bot.alive && !isFever && Math.abs((bot.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((bot.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
-                bot.alive = false; document.getElementById('vs-status').innerText = "AI 탈락";
-                if(!p.alive) gameOver();
+            if(!isFever && player.invul <= 0 && Math.abs((player.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((player.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
+                player.hp--;
+                player.invul = 60; // 약 1초 무적
+                updateHeartUI();
+                if(player.hp <= 0) gameOver();
             }
             if(o.x < -100) obs.splice(i, 1);
         });
 
         coins.forEach((c, i) => {
             c.x -= s;
-            if(isFever && p.alive) { c.x += (p.x - c.x) * 0.25; c.y += (p.y - c.y) * 0.25; }
-            if(p.alive && Math.abs(p.x - c.x) < 55 && Math.abs(p.y - c.y) < 55) {
-                coins.splice(i, 1); gauge = Math.min(100, gauge + 10);
+            if(isFever) { c.x += (player.x - c.x) * 0.25; c.y += (player.y - c.y) * 0.25; }
+            if(Math.abs(player.x - c.x) < 55 && Math.abs(player.y - c.y) < 55) {
+                coins.splice(i, 1);
+                gauge = Math.min(100, gauge + 10);
                 if(gauge >= 100) isFever = true;
             }
             if(c.x < -100) coins.splice(i, 1);
         });
 
-        if(isFever) { gauge -= 0.4; if(gauge <= 0) isFever = false; }
-        if(!p.alive && !bot.alive) gameOver();
+        hearts.forEach((h, i) => {
+            h.x -= s;
+            if(Math.abs(player.x - h.x) < 50 && Math.abs(player.y - h.y) < 50) {
+                hearts.splice(i, 1);
+                if(player.hp < 3) { player.hp++; updateHeartUI(); }
+            }
+            if(h.x < -100) hearts.splice(i, 1);
+        });
 
+        if(isFever) { gauge -= 0.4; if(gauge <= 0) isFever = false; }
         document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
         document.getElementById('f-fill').style.width = gauge + "%";
     }
@@ -246,14 +227,10 @@
         ctx.strokeStyle = isFever ? COLORS.pink : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
         
-        if(p.alive) {
-            ctx.fillStyle = isFever ? '#fff' : (p.jCount === 2 ? COLORS.gold : COLORS.neon);
-            ctx.fillRect(p.x, p.y, 40, 45);
-        }
-
-        if(bot.alive) {
-            ctx.fillStyle = COLORS.red; ctx.globalAlpha = 0.6;
-            ctx.fillRect(bot.x, bot.y, 40, 45); ctx.globalAlpha = 1.0;
+        // 플레이어 깜빡임 (무적 상태)
+        if(player.invul % 10 < 5) {
+            ctx.fillStyle = isFever ? '#fff' : (player.jCount === 2 ? COLORS.gold : COLORS.neon);
+            ctx.fillRect(player.x, player.y, 40, 45);
         }
 
         ctx.fillStyle = COLORS.pink;
@@ -261,6 +238,18 @@
         
         ctx.fillStyle = COLORS.gold;
         coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, Math.PI*2); ctx.fill(); });
+
+        // 하트 아이템 그리기
+        ctx.fillStyle = COLORS.heart;
+        hearts.forEach(h => {
+            ctx.beginPath();
+            ctx.moveTo(h.x, h.y + 5);
+            ctx.bezierCurveTo(h.x, h.y, h.x - 10, h.y, h.x - 10, h.y + 10);
+            ctx.bezierCurveTo(h.x - 10, h.y + 20, h.x, h.y + 25, h.x, h.y + 30);
+            ctx.bezierCurveTo(h.x, h.y + 25, h.x + 10, h.y + 20, h.x + 10, h.y + 10);
+            ctx.bezierCurveTo(h.x + 10, h.y, h.x, h.y, h.x, h.y + 5);
+            ctx.fill();
+        });
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
