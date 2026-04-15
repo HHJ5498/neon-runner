@@ -3,34 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: ULTIMATE SMART AI</title>
+    <title>NEON DASH: AI ULTIMATE FIX</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
-        :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; --bg: #050508; }
+        :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
+        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; }
         
-        #game-view { position: relative; flex: 1; width: 100%; display: flex; background: var(--bg); overflow: hidden; }
+        #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #050508; overflow: hidden; }
         canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; z-index: 1; }
         
-        /* UI 레이어 */
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        #title { color: #fff; font-size: 38px; font-weight: 900; text-shadow: 0 0 20px var(--neon-blue); margin-bottom: 25px; }
+        /* 메뉴 레이어 */
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        #title { color: #fff; font-size: 32px; font-weight: 900; text-shadow: 0 0 15px #00f2ff; margin-bottom: 20px; }
         
-        .settings-box { background: #111; padding: 25px; border-radius: 20px; border: 1px solid var(--neon-blue); margin-bottom: 30px; width: 300px; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
-        .settings-box label { color: #888; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
-        #speed-slider { width: 100%; cursor: pointer; accent-color: var(--neon-blue); margin: 15px 0; }
-        #speed-display { color: var(--neon-blue); font-size: 30px; font-weight: 900; }
+        .settings-box { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #00f2ff; margin-bottom: 25px; width: 280px; text-align: center; }
+        #speed-slider { width: 100%; cursor: pointer; accent-color: #00f2ff; margin: 10px 0; }
+        #speed-display { color: #00f2ff; font-size: 28px; font-weight: 900; }
 
-        .btn-start { background: var(--neon-blue); color: #000; padding: 18px 80px; font-size: 24px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; transition: 0.3s; box-shadow: 0 0 20px var(--neon-blue); }
-        .btn-start:hover { transform: scale(1.05); }
+        .btn-start { background: #00f2ff; color: #000; padding: 15px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px #00f2ff; }
 
-        #stat-bar { width: 100%; height: 60px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; }
-        .val { color: white; font-size: 18px; font-weight: 900; font-family: monospace; }
-        .fever-container { width: 100px; height: 10px; background: #222; border-radius: 5px; overflow: hidden; }
-        #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); transition: width 0.1s; }
+        /* 하단 상태바 */
+        #stat-bar { width: 100%; height: 55px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #333; }
+        .val { color: white; font-size: 16px; font-weight: 900; }
+        .fever-bar { width: 80px; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+        #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #ff0077); }
         
         #ad-bottom { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; }
     </style>
@@ -40,20 +39,20 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div id="title">NEON DASH : AI</div>
+            <div id="title">NEON DASH AI</div>
             <div class="settings-box">
-                <label>System Speed</label>
+                <p style="color:#888; font-size:12px; font-weight:bold;">SET SPEED</p>
                 <input type="range" id="speed-slider" min="1" max="16" value="10">
                 <div id="speed-display">10</div>
             </div>
-            <button class="btn-start" id="start-btn">INITIALIZE</button>
+            <button class="btn-start" id="start-btn">GAME START</button>
         </div>
     </div>
 
     <div id="stat-bar">
-        <div id="score" class="val">0000</div>
-        <div class="fever-container"><div id="fever-fill"></div></div>
-        <div id="gauge-text" class="val" style="color:var(--gold);">0%</div>
+        <div id="score" class="val">0</div>
+        <div class="fever-bar"><div id="fever-fill"></div></div>
+        <div id="gauge-text" class="val" style="color:#ffcc00;">0%</div>
     </div>
 
     <div id="ad-bottom">
@@ -66,108 +65,111 @@
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
+    // 색상 상수 (자바스크립트 인식용)
+    const COLORS = { blue: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508' };
+
     const slider = document.getElementById('speed-slider');
     const display = document.getElementById('speed-display');
+    const ovl = document.getElementById('ovl');
     
-    // 💡 AI 최적화 물리 설정
-    let config = { baseSpeed: 10, jump1: -22, jump2: -19, gravity: 1.2, spawnTimer: 0 };
-    slider.oninput = function() { config.baseSpeed = parseInt(this.value); display.innerText = this.value; };
+    let config = { baseSpeed: 10, j1: -22, j2: -18, gravity: 1.2, spawnTimer: 0 };
+    
+    slider.oninput = function() {
+        config.baseSpeed = parseInt(this.value);
+        display.innerText = this.value;
+    };
 
     const game = {
         isLive: false, score: 0, gauge: 0, fever: false,
-        // 지능형 패턴 데이터
         patterns: [
-            { id: 'SINGLE', weight: 4, items: [350] },
-            { id: 'DOUBLE_STEP', weight: 3, items: [350, 350] },
-            { id: 'WALL', weight: 2, items: [350, 220] }, 
-            { id: 'TRAP', weight: 1, items: [350, 150, 350] } 
+            { items: [350] },
+            { items: [350, 350] },
+            { items: [350, 220] },
+            { items: [350, 150] }
         ],
         start() {
-            this.isLive = true; this.score = 0; this.gauge = 0;
-            p.y = 350; p.dy = 0; p.jCount = 0; obs = []; coins = [];
-            document.getElementById('ovl').style.display = 'none';
+            this.isLive = true; this.score = 0; this.gauge = 0; this.fever = false;
+            p.y = 350; p.dy = 0; p.jCount = 0;
+            obs = []; coins = [];
+            ovl.style.display = 'none';
+        },
+        over() {
+            this.isLive = false;
+            document.getElementById('title').innerText = "GAME OVER";
+            ovl.style.display = 'flex';
         }
     };
 
     const p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0 };
     let obs = [], coins = [];
 
-    // 💡 AI 물리 엔진: 현재 속도에 맞춰 중력과 도약력을 "예측" 하여 동기화
-    function syncAIPhysics(speed) {
-        // 체공 시간 최적화: 속도가 빠를수록 중력을 높여 빠른 착지 유도
-        p.g = speed < 8 ? 0.75 : 0.9 + (speed * 0.05);
-        
-        // 도약력 최적화: 2단 점프 시 궤적이 화면 밖을 나가지 않도록 속도 비례 계산
-        config.jump1 = -(16 + (speed * 0.8));
-        config.jump2 = config.jump1 * 0.82; 
+    // 💡 AI 물리 엔진 동기화
+    function syncAI(speed) {
+        p.g = speed < 9 ? 0.75 + (speed * 0.04) : 1.0 + (speed * 0.05);
+        config.j1 = -(17 + (speed * 0.75));
+        config.j2 = config.j1 * 0.85;
     }
 
-    // 💡 지능형 패턴 생성기: 플레이어의 속도에 맞춰 '탈출 가능 거리'를 확보
-    function spawnSmartPattern(speed) {
+    // 💡 스마트 장애물 생성
+    function spawnSmart(speed) {
         const pattern = game.patterns[Math.floor(Math.random() * game.patterns.length)];
-        const safetyGap = 400 / speed; // 속도가 빠를수록 간격을 물리적으로 조절
-        
-        pattern.items.forEach((yPos, i) => {
+        const gap = 380 / speed;
+        pattern.items.forEach((y, i) => {
             setTimeout(() => {
-                if(game.isLive && !game.fever) {
-                    obs.push({ x: 950, y: yPos, s: speed, w: 35, h: 45 });
-                }
-            }, i * (safetyGap * 40)); 
+                if(game.isLive && !game.fever) obs.push({ x: 950, y: y, s: speed });
+            }, i * (gap * 35));
         });
     }
 
+    // 입력 처리 (PC & 모바일 통합)
     const btn = document.getElementById('start-btn');
-    btn.onclick = () => game.start();
+    btn.onclick = (e) => { e.stopPropagation(); game.start(); };
 
-    function handleAction() {
-        if (!game.isLive) return;
+    function jumpTrigger(e) {
+        if (!game.isLive || e.target.id === 'speed-slider') return;
         if (p.jCount < 2) {
-            p.dy = (p.jCount === 0) ? config.jump1 : config.jump2;
+            p.dy = (p.jCount === 0) ? config.j1 : config.j2;
             p.jCount++;
         }
     }
-
-    window.addEventListener('mousedown', (e) => { if(e.target.id !== 'speed-slider') handleAction(); });
-    window.addEventListener('touchstart', (e) => { if(e.target.id !== 'speed-slider') { handleAction(); e.preventDefault(); } }, {passive: false});
+    window.addEventListener('mousedown', jumpTrigger);
+    window.addEventListener('touchstart', (e) => {
+        if(e.target.id !== 'speed-slider' && e.target.id !== 'start-btn') {
+            jumpTrigger(e);
+            if(e.cancelable) e.preventDefault();
+        }
+    }, {passive: false});
 
     function update() {
         if(!game.isLive) return;
         
-        let currentSpeed = (config.baseSpeed + (game.score/1500)) * (game.fever ? 1.45 : 1);
-        syncAIPhysics(currentSpeed);
+        let curS = (config.baseSpeed + (game.score/1500)) * (game.fever ? 1.4 : 1);
+        syncAI(curS);
         
-        game.score += currentSpeed / 15;
+        game.score += curS / 15;
         p.dy += p.g; p.y += p.dy;
         
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
 
-        config.spawnTimer -= currentSpeed;
+        config.spawnTimer -= curS;
         if(config.spawnTimer <= 0 && !game.fever) {
-            spawnSmartPattern(currentSpeed);
-            // 다음 패턴 생성 시점도 AI가 랜덤성을 부여
-            config.spawnTimer = 200 + (Math.random() * 250); 
+            spawnSmart(curS);
+            config.spawnTimer = 220 + Math.random() * 200;
         }
 
         if(Math.random() < 0.02) coins.push({ x: 950, y: 180 + Math.random() * 150 });
 
-        // 장애물 처리 & 스마트 충돌 판정
         obs.forEach((o, i) => {
             o.x -= o.s;
-            // 2단 점프 중일 땐 판정을 10% 더 유리하게(작게) 적용
-            let hitReduce = p.jCount === 2 ? 0.85 : 1.0;
-            if(!game.fever && 
-               Math.abs(p.x + 20 - (o.x + 17)) < (25 * hitReduce) && 
-               Math.abs(p.y + 22 - (o.y + 22)) < (30 * hitReduce)) {
-                game.isLive = false;
-                document.getElementById('title').innerText = "SYSTEM REBOOT";
-                document.getElementById('ovl').style.display = 'flex';
+            let hitW = p.jCount === 2 ? 22 : 28; // 스마트 히트박스
+            if(!game.fever && Math.abs(p.x + 20 - (o.x + 17)) < hitW && Math.abs(p.y + 22 - (o.y + 22)) < 30) {
+                game.over();
             }
             if(o.x < -100) obs.splice(i, 1);
         });
 
-        // 코인(에너지) 처리
         coins.forEach((c, i) => {
-            c.x -= currentSpeed;
+            c.x -= curS;
             if(game.fever) { c.x += (p.x - c.x) * 0.2; c.y += (p.y - c.y) * 0.2; }
             if(Math.abs(p.x - c.x) < 50 && Math.abs(p.y - c.y) < 50) {
                 coins.splice(i, 1);
@@ -177,41 +179,34 @@
             if(c.x < -100) coins.splice(i, 1);
         });
 
-        if(game.fever) { game.gauge -= 0.55; if(game.gauge <= 0) game.fever = false; }
+        if(game.fever) { game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false; }
 
-        // UI 업데이트
-        document.getElementById('score').innerText = Math.floor(game.score).toString().padStart(4, '0');
+        document.getElementById('score').innerText = Math.floor(game.score);
         document.getElementById('gauge-text').innerText = Math.floor(game.gauge) + "%";
         document.getElementById('fever-fill').style.width = game.gauge + "%";
     }
 
     function draw() {
-        ctx.fillStyle = '#050508'; ctx.fillRect(0,0,900,450);
+        ctx.fillStyle = COLORS.bg; ctx.fillRect(0,0,900,450);
         
-        // 가이드 라인 (바닥)
-        ctx.strokeStyle = game.fever ? var(--neon-pink) : '#1a1a2e';
+        // 바닥선
+        ctx.strokeStyle = game.fever ? COLORS.pink : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
 
-        // 플레이어 (잔상 효과 포함)
-        ctx.shadowBlur = 15; ctx.shadowColor = game.fever ? '#fff' : var(--neon-blue);
-        ctx.fillStyle = game.fever ? '#fff' : (p.jCount === 2 ? var(--gold) : var(--neon-blue));
+        // 플레이어
+        ctx.fillStyle = game.fever ? '#fff' : (p.jCount === 2 ? COLORS.gold : COLORS.blue);
         ctx.fillRect(p.x, p.y, 40, 45);
-        ctx.shadowBlur = 0;
 
         // 장애물
-        ctx.fillStyle = var(--neon-pink);
-        obs.forEach(o => { 
-            ctx.shadowBlur = 10; ctx.shadowColor = var(--neon-pink);
-            ctx.fillRect(o.x, o.y, o.w, o.h); 
-        });
+        ctx.fillStyle = COLORS.pink;
+        obs.forEach(o => { ctx.fillRect(o.x, o.y, 35, 45); });
         
         // 코인
-        ctx.shadowBlur = 0; ctx.fillStyle = var(--gold);
-        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, Math.PI*2); ctx.fill(); });
+        ctx.fillStyle = COLORS.gold;
+        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
-    const varCss = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     loop();
     </script>
 </body>
