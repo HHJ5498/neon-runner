@@ -12,13 +12,13 @@
 
         #game-area { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; background: var(--bg); padding: 10px; }
         #canvas-box { 
-            position: relative; width: 100%; max-width: 900px; height: 450px; 
+            position: relative; width: 100%; max-width: 900px; height: 500px; 
             background: #000; border: 2px solid #333; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
         }
 
         @media (max-width: 600px) {
-            #canvas-box { max-width: 100%; height: 80vh; } 
+            #canvas-box { max-width: 100%; height: 85vh; } 
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -28,13 +28,13 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
 
-        #title { font-size: 30px; font-weight: 900; color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 20px var(--gold); }
+        #title { font-size: 32px; font-weight: 900; color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 20px var(--gold); }
         #ranking-box { width: 240px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px solid #444; }
         .rank-item { display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0; color: #eee; font-family: monospace; }
-        .btn-start { background: var(--gold); color: #000; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-start { background: var(--gold); color: #000; padding: 18px 70px; font-size: 24px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
 
         #stat-bar { height: 55px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; font-weight: bold; }
-        #ad-box { height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        #ad-box { height: 75px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -44,7 +44,7 @@
             <canvas id="cvs"></canvas>
             <div id="ovl">
                 <div id="title">Neon Runner</div>
-                <div id="ranking-box" id="rank-list"></div>
+                <div id="ranking-box"></div>
                 <button class="btn-start" id="start-btn">START GAME</button>
             </div>
         </div>
@@ -70,13 +70,13 @@
 
     function initEnv() {
         isMobile = window.innerWidth <= 600;
-        cvs.width = isMobile ? 600 : 1200; // PC 해상도 가로폭 확장
-        cvs.height = isMobile ? 900 : 600; // 화면 높이 상향
+        cvs.width = isMobile ? 600 : 1200;
+        cvs.height = isMobile ? 1000 : 600; 
         
         const gY = cvs.height - 100;
         
         p = { 
-            x: isMobile ? 80 : 150, 
+            x: isMobile ? 80 : 180, 
             y: gY - 60, 
             dy: 0, 
             jc: 0, 
@@ -86,19 +86,19 @@
             h: 60 
         };
 
-        // [핵심 튜닝] 점프 높이 상향 & 하강 속도 대폭 증가
+        // 점프는 더 높게, 중력은 더 강하게 (장애물 간격은 유지)
         cfg = { 
-            spd: isMobile ? 12 : 15, 
-            grav: isMobile ? 2.8 : 3.2,  // 하강 속도를 위해 중력 상향
-            jump: isMobile ? -36 : -38,  // 점프력 대폭 강화 (높게)
+            spd: isMobile ? 13 : 16, 
+            grav: isMobile ? 3.8 : 4.2, 
+            jump: isMobile ? -52 : -55, 
             next: 0, 
-            gap: isMobile ? 550 : 750 
+            gap: isMobile ? 600 : 800 
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_v6') || "[]");
+        const ranks = JSON.parse(localStorage.getItem('neon_vFinal') || "[]");
         const list = document.getElementById('ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
@@ -127,10 +127,14 @@
     function loop() {
         const gY = cvs.height - 100;
         if(isLive) {
-            cfg.spd += 0.0022; 
+            cfg.spd += 0.0025; 
             p.dy += cfg.grav; 
             p.y += p.dy;
 
+            // 천장 처리
+            if(p.y < 0) { p.y = 0; p.dy = 0; }
+
+            // 바닥 착지
             if(p.y >= gY - p.h) { 
                 p.y = gY - p.h; 
                 p.dy = 0; 
@@ -141,7 +145,8 @@
             cfg.next -= cfg.spd;
 
             if(cfg.next <= 0) {
-                let h = Math.random() > 0.7 ? 50 : 100;
+                // 장애물 높이는 요청하신 대로 원래의 낮은/중간 높이 유지
+                let h = Math.random() > 0.7 ? 40 : 80; 
                 obs.push({ x: cvs.width + 100, y: gY - h, w: 35, h: h });
                 cfg.next = (cfg.gap + Math.random() * 300) * (15 / cfg.spd);
             }
@@ -152,9 +157,9 @@
                     p.hp--; p.inv = 60;
                     if(p.hp <= 0) {
                         isLive = false;
-                        let r = JSON.parse(localStorage.getItem('neon_v6') || "[]");
+                        let r = JSON.parse(localStorage.getItem('neon_vFinal') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_v6', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_vFinal', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
