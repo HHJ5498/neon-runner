@@ -3,78 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: RESPONSIVE</title>
+    <title>NEON DASH: VS AI</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
-        :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; }
+        :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; --red: #ff3300; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        /* 전체 화면 설정: 여백(safe-area) 확보 */
         body { 
             height: 100vh; background: #000; overflow: hidden; 
             display: flex; flex-direction: column; 
-            font-family: -apple-system, system-ui, sans-serif; 
-            color: white;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            font-family: -apple-system, system-ui, sans-serif; color: white;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
         }
         
-        /* 게임 뷰: 화면 크기에 맞춰 유동적으로 변화 */
-        #game-view { 
-            position: relative; flex: 1; width: 100%; 
-            display: flex; justify-content: center; align-items: center;
-            background: #050508; overflow: hidden; 
-        }
+        #game-view { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; background: #050508; overflow: hidden; }
+        canvas { max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1; touch-action: none; }
         
-        /* 캔버스: 해상도 유지를 위해 고정비율 유지하며 확장 */
-        canvas { 
-            max-width: 100%; max-height: 100%; 
-            object-fit: contain; 
-            z-index: 1; touch-action: none; 
-        }
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.94); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; overflow-y: auto; }
+        .scroll-hint { font-size: 11px; color: var(--neon); margin-bottom: 5px; animation: bounce 1.5s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
         
-        /* 메뉴 레이어: 모바일에서 안 잘리도록 padding과 스크롤 허용 */
-        .overlay { 
-            position: absolute; inset: 0; 
-            background: rgba(0, 0, 0, 0.9); 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 9999; padding: 20px; 
-            overflow-y: auto; /* 내용이 많으면 스크롤 가능하게 */
-        }
+        #title { font-size: 28px; font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 15px; }
         
-        #title { font-size: clamp(20px, 5vw, 28px); font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 15px; }
-        
-        .settings-box { 
-            background: #111; padding: 15px; border-radius: 15px; border: 1px solid var(--neon); 
-            width: 100%; max-width: 300px; margin-bottom: 10px; 
-        }
+        /* 모드 선택 버튼 */
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 320px; }
+        .mode-btn { flex: 1; padding: 12px; border: 1px solid #444; background: #111; color: #888; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .mode-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(0, 242, 255, 0.1); }
+        .mode-btn.vs-active { border-color: var(--red); color: var(--red); background: rgba(255, 51, 0, 0.1); }
+
+        .settings-box { background: #111; padding: 15px; border-radius: 15px; border: 1px solid #333; width: 100%; max-width: 320px; margin-bottom: 12px; }
         .setting-item { margin-bottom: 10px; }
         .setting-item label { color: #888; font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px; text-align: left; }
         input[type="range"] { width: 100%; height: 25px; cursor: pointer; accent-color: var(--neon); }
         .val-display { color: var(--neon); font-size: 16px; font-weight: 900; }
 
-        .rank-box { 
-            width: 100%; max-width: 300px; background: #0a0a0a; 
-            border: 1px solid #333; border-radius: 12px; padding: 8px; margin-bottom: 10px; 
-        }
+        .rank-box { width: 100%; max-width: 320px; background: #0a0a0a; border: 1px solid #222; border-radius: 12px; padding: 10px; margin-bottom: 12px; }
         .rank-title { color: var(--gold); font-size: 12px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #222; }
         #rank-list { list-style: none; text-align: left; font-size: 12px; }
         #rank-list li { display: flex; justify-content: space-between; padding: 2px 5px; color: #ccc; }
 
-        .btn-start { background: var(--neon); color: #000; padding: 12px 50px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; }
+        .btn-start { background: var(--neon); color: #000; padding: 14px 60px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
 
-        /* 하단 바: 모바일 네비게이션바 고려 */
-        #stat-bar { 
-            width: 100%; height: 45px; background: #000; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; border-top: 1px solid #222; font-size: 13px;
-        }
-        
-        #ad-area { 
-            width: 100%; min-height: 50px; background: #000; 
-            display: flex; justify-content: center; align-items: center; 
-        }
+        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
+        #ad-area { width: 100%; min-height: 55px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #111; }
     </style>
 </head>
 <body>
@@ -82,36 +55,40 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
+            <div class="scroll-hint">▼ 모드 선택 및 설정</div>
             <div id="title">NEON DASH AI</div>
             
+            <div class="mode-selector">
+                <button id="btn-solo" class="mode-btn active">기본 모드</button>
+                <button id="btn-vs" class="mode-btn">AI 대결 (Red)</button>
+            </div>
+
             <div class="rank-box">
-                <div class="rank-title">🏆 TOP 5</div>
+                <div class="rank-title">🏆 TOP 5 랭킹</div>
                 <ul id="rank-list"></ul>
             </div>
 
             <div class="settings-box">
                 <div class="setting-item">
-                    <label>SPEED</label>
-                    <input type="range" id="speed-slider" min="1" max="16" value="10">
+                    <label>속도 설정 (1-24)</label>
+                    <input type="range" id="speed-slider" min="1" max="24" value="10">
                     <div id="speed-display" class="val-display">10</div>
                 </div>
                 <div class="setting-item">
-                    <label>OBSTACLE SIZE</label>
+                    <label>장애물 크기 (5-40px)</label>
                     <input type="range" id="size-slider" min="5" max="40" value="15">
                     <div id="size-display" class="val-display">15px</div>
                 </div>
             </div>
             
-            <button class="btn-start" id="start-btn">START</button>
+            <button class="btn-start" id="start-btn">엔진 가동</button>
         </div>
     </div>
 
     <div id="stat-bar">
-        <div id="score-txt" style="font-weight:900;">SCORE: 0</div>
-        <div style="width: 70px; height: 6px; background: #222; border-radius: 3px; overflow: hidden;">
-            <div id="f-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #ff0077);"></div>
-        </div>
-        <div id="best-txt" style="color:var(--gold);">BEST: 0</div>
+        <div id="score-txt" style="font-weight:900; font-size:14px;">SCORE: 0</div>
+        <div id="vs-status" style="color:var(--red); font-weight:bold; font-size:12px; display:none;">AI ALIVE</div>
+        <div id="best-txt" style="color:var(--gold); font-size:14px;">BEST: 0</div>
     </div>
 
     <div id="ad-area">
@@ -125,26 +102,26 @@
     <script>
     const cvs = document.getElementById('cvs');
     const ctx = cvs.getContext('2d');
-    
-    // 캔버스 논리적 해상도 고정 (이 비율을 유지하며 화면에 꽉 참)
     cvs.width = 900; cvs.height = 450;
 
-    const COLORS = { neon: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508' };
-    const sSpeed = document.getElementById('speed-slider');
-    const sSize = document.getElementById('size-slider');
-    const dSpeed = document.getElementById('speed-display');
-    const dSize = document.getElementById('size-display');
-    const ovl = document.getElementById('ovl');
+    const COLORS = { neon: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508', red: '#ff3300' };
+    const sSpeed = document.getElementById('speed-slider'), sSize = document.getElementById('size-slider');
+    const dSpeed = document.getElementById('speed-display'), dSize = document.getElementById('size-display');
+    const ovl = document.getElementById('ovl'), btnSolo = document.getElementById('btn-solo'), btnVs = document.getElementById('btn-vs');
 
-    let config = { baseSpeed: 10, obsSize: 15, j1: -21, j2: -18, g: 1.2, timer: 0 };
-    let player = { x: 120, y: 350, dy: 0, jCount: 0 };
+    let config = { baseSpeed: 10, obsSize: 15, timer: 0, mode: 'solo' };
+    let p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: true };
+    let bot = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: false }; // AI 봇
     let obs = [], coins = [], isLive = false, score = 0, gauge = 0, isFever = false;
 
-    // 랭킹 시스템
+    // 모드 선택 로직
+    btnSolo.onclick = () => { config.mode = 'solo'; btnSolo.classList.add('active'); btnVs.classList.remove('vs-active'); };
+    btnVs.onclick = () => { config.mode = 'vs'; btnVs.classList.add('vs-active'); btnSolo.classList.remove('active'); };
+
     function updateRankBoard() {
         let ranks = JSON.parse(localStorage.getItem('neon_ranks') || '[]');
         ranks.sort((a,b) => b - a);
-        document.getElementById('rank-list').innerHTML = ranks.slice(0, 5).map((s, i) => `<li>#${i+1} <b>${Math.floor(s)}</b></li>`).join('') || "No Record";
+        document.getElementById('rank-list').innerHTML = ranks.slice(0, 5).map((s, i) => `<li>#${i+1} <b>${Math.floor(s)}</b></li>`).join('') || "기록 없음";
         document.getElementById('best-txt').innerText = "BEST: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
     }
 
@@ -153,9 +130,12 @@
 
     function startGame() {
         isLive = true; score = 0; gauge = 0; isFever = false;
-        player.y = 350; player.dy = 0; player.jCount = 0;
+        p.y = 350; p.dy = 0; p.jCount = 0; p.alive = true;
+        bot.y = 350; bot.dy = 0; bot.jCount = 0; bot.alive = (config.mode === 'vs');
         obs = []; coins = [];
         ovl.style.display = 'none';
+        document.getElementById('vs-status').style.display = bot.alive ? 'block' : 'none';
+        document.getElementById('vs-status').innerText = "AI ALIVE";
     }
 
     function gameOver() {
@@ -165,17 +145,23 @@
         ranks.sort((a,b) => b - a);
         localStorage.setItem('neon_ranks', JSON.stringify(ranks.slice(0, 10)));
         updateRankBoard();
-        document.getElementById('title').innerText = "GAME OVER";
+        document.getElementById('title').innerText = p.alive ? "AI DEFEATED!" : "ENGINE CRASHED";
         ovl.style.display = 'flex';
     }
 
+    function applyAIPhysics(s) {
+        let gravity = 0.8 + (s * 0.045);
+        let j1 = -(16.5 + (s * 0.72));
+        return { g: gravity, j1: j1, j2: j1 * 0.85 };
+    }
+
     function handleInput(e) {
-        if (!isLive || e.target.closest('.settings-box')) return;
-        if (player.jCount < 2) {
+        if (!isLive || e.target.closest('.settings-box') || e.target.closest('.mode-selector')) return;
+        if (p.alive && p.jCount < 2) {
             let s = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
-            let force = -(17 + (s * 0.75));
-            player.dy = (player.jCount === 0) ? force : force * 0.8;
-            player.jCount++;
+            const f = applyAIPhysics(s);
+            p.dy = (p.jCount === 0) ? f.j1 : f.j2;
+            p.jCount++;
         }
         if(e.cancelable) e.preventDefault();
     }
@@ -187,36 +173,69 @@
     function update() {
         if(!isLive) return;
         let s = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
-        player.g = s < 10 ? 0.7 + (s * 0.05) : 1.1 + (s * 0.04);
+        const f = applyAIPhysics(s);
         score += s / 15;
-        player.dy += player.g; player.y += player.dy;
-        if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
+
+        // 플레이어 물리
+        if(p.alive) {
+            p.g = f.g; p.dy += p.g; p.y += p.dy;
+            if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
+        }
+
+        // 빨간색 AI(봇) 로직
+        if(bot.alive) {
+            bot.g = f.g; bot.dy += bot.g; bot.y += bot.dy;
+            if(bot.y > 350) { bot.y = 350; bot.dy = 0; bot.jCount = 0; }
+
+            // AI 장애물 감지 및 점프 (지능형 예측)
+            obs.forEach(o => {
+                let dist = o.x - bot.x;
+                if(dist > 0 && dist < (150 + s * 5) && bot.jCount === 0) {
+                    bot.dy = f.j1; bot.jCount++;
+                }
+                // 2단 점프가 필요한 높은 장애물 감지
+                if(dist > 0 && dist < 80 && o.y < 300 && bot.jCount === 1) {
+                    bot.dy = f.j2; bot.jCount++;
+                }
+            });
+        }
 
         config.timer -= s;
         if(config.timer <= 0 && !isFever) {
-            let py = Math.random() > 0.5 ? 395 : 250;
+            let py = Math.random() > 0.45 ? 395 : 240;
             obs.push({ x: 950, y: py - config.obsSize, w: config.obsSize, h: config.obsSize, s: s });
-            config.timer = 200 + Math.random() * 200;
+            config.timer = (250 + Math.random() * 200) * (10 / s + 0.5);
         }
-        if(Math.random() < 0.02) coins.push({ x: 950, y: 200 + Math.random() * 150 });
+
+        if(Math.random() < 0.02) coins.push({ x: 950, y: 180 + Math.random() * 180 });
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            if(!isFever && Math.abs((player.x + 20) - (o.x + o.w/2)) < (18 + o.w/2) && Math.abs((player.y + 22) - (o.y + o.h/2)) < (20 + o.h/2)) gameOver();
+            // 플레이어 충돌
+            if(p.alive && !isFever && Math.abs((p.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((p.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
+                p.alive = false; if(!bot.alive) gameOver();
+            }
+            // AI 충돌
+            if(bot.alive && !isFever && Math.abs((bot.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((bot.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
+                bot.alive = false; document.getElementById('vs-status').innerText = "AI ELIMINATED";
+                if(!p.alive) gameOver();
+            }
             if(o.x < -100) obs.splice(i, 1);
         });
 
+        // 플레이어가 살아있을 때만 코인 획득 가능
         coins.forEach((c, i) => {
             c.x -= s;
-            if(isFever) { c.x += (player.x - c.x) * 0.2; c.y += (player.y - c.y) * 0.2; }
-            if(Math.abs(player.x - c.x) < 50 && Math.abs(player.y - c.y) < 50) {
-                coins.splice(i, 1);
-                gauge = Math.min(100, gauge + 10);
+            if(isFever && p.alive) { c.x += (p.x - c.x) * 0.25; c.y += (p.y - c.y) * 0.25; }
+            if(p.alive && Math.abs(p.x - c.x) < 55 && Math.abs(p.y - c.y) < 55) {
+                coins.splice(i, 1); gauge = Math.min(100, gauge + 10);
                 if(gauge >= 100) isFever = true;
             }
             if(c.x < -100) coins.splice(i, 1);
         });
-        if(isFever) { gauge -= 0.5; if(gauge <= 0) isFever = false; }
+
+        if(isFever) { gauge -= 0.4; if(gauge <= 0) isFever = false; }
+        if(!p.alive && !bot.alive) gameOver();
 
         document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
         document.getElementById('f-fill').style.width = gauge + "%";
@@ -226,12 +245,26 @@
         ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, 900, 450);
         ctx.strokeStyle = isFever ? COLORS.pink : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
-        ctx.fillStyle = isFever ? '#fff' : (player.jCount === 2 ? COLORS.gold : COLORS.neon);
-        ctx.fillRect(player.x, player.y, 40, 45);
+        
+        // 플레이어 (하늘색/금색)
+        if(p.alive) {
+            ctx.fillStyle = isFever ? '#fff' : (p.jCount === 2 ? COLORS.gold : COLORS.neon);
+            ctx.fillRect(p.x, p.y, 40, 45);
+        }
+
+        // AI 봇 (빨간색)
+        if(bot.alive) {
+            ctx.fillStyle = COLORS.red;
+            ctx.globalAlpha = 0.7; // 봇은 살짝 투명하게 해서 겹쳐도 보이게
+            ctx.fillRect(bot.x, bot.y, 40, 45);
+            ctx.globalAlpha = 1.0;
+        }
+
         ctx.fillStyle = COLORS.pink;
         obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+        
         ctx.fillStyle = COLORS.gold;
-        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
+        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, Math.PI*2); ctx.fill(); });
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
