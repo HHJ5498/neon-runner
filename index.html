@@ -3,73 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner : 동체시력키우기</title>
+    <title>Neon Runner</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: none; -webkit-user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         
-        html, body { height: 100%; width: 100%; background: #000; font-family: sans-serif; color: white; overflow: hidden; }
+        html, body { height: 100%; width: 100%; background: #000; font-family: sans-serif; overflow: hidden; }
         body { display: flex; flex-direction: column; }
 
+        /* 게임 영역: PC/모바일 공통 화면 중앙 배치 */
         #game-area { 
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center; 
-            background: var(--bg); overflow: hidden; padding: 15px;
+            background: var(--bg); padding: 10px;
         }
 
-        /* 캔버스 박스 비율 고정 */
+        /* [핵심 수정] 박스 크기를 명시적으로 지정 */
         #canvas-box { 
-            position: relative; width: 100%; max-width: 800px; 
-            aspect-ratio: 2 / 1; /* PC 가로 */
+            position: relative; 
+            width: 100%; 
+            max-width: 900px; /* PC 최대 가로폭 */
+            height: 450px;    /* PC 고정 높이 */
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
+        /* 모바일 세로 모드 강제 전환 */
         @media (max-width: 600px) {
-            #canvas-box { aspect-ratio: 4 / 5; max-width: 400px; } /* 모바일 세로 */
+            #canvas-box { 
+                max-width: 400px; 
+                height: 500px; /* 모바일 세로 높이 */
+            }
         }
 
-        canvas { 
-            width: 100%; height: 100%; display: block; 
-            background: #000; border: 2px solid #333; border-radius: 12px; 
-            image-rendering: pixelated; /* 도트 뭉개짐 방지 */
-        }
+        canvas { width: 100%; height: 100%; display: block; }
 
+        /* 오버레이 (스타트 화면) */
         #ovl { 
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); 
             display: flex; flex-direction: column; justify-content: center; 
-            align-items: center; z-index: 1000; padding: 20px; border-radius: 12px; 
+            align-items: center; z-index: 100;
         }
 
-        #title { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 10px; text-shadow: 0 0 15px var(--gold); }
-        #sub-title { font-size: 13px; color: var(--neon); margin-bottom: 25px; font-weight: bold; opacity: 0.8; }
+        #title { font-size: 28px; font-weight: 900; color: var(--gold); margin-bottom: 20px; text-shadow: 0 0 15px var(--gold); }
+        #ranking-box { width: 220px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 10px; margin-bottom: 20px; border: 1px solid #333; }
+        .rank-item { display: flex; justify-content: space-between; font-size: 13px; margin: 5px 0; color: #ccc; font-family: monospace; }
+        .btn-start { background: var(--gold); color: #000; padding: 15px 60px; font-size: 20px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; }
 
-        #ranking-box { width: 100%; max-width: 240px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 10px; margin-bottom: 25px; border: 1px solid #333; }
-        .rank-title { font-size: 14px; color: var(--gold); text-align: center; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; font-weight: bold; }
-        .rank-item { display: flex; justify-content: space-between; font-size: 13px; margin: 4px 0; font-family: monospace; }
-        
-        .btn-start { 
-            background: var(--gold); color: #000; padding: 16px 70px; 
-            font-size: 22px; font-weight: 900; border-radius: 50px; 
-            border: none; cursor: pointer; transition: transform 0.1s; 
-        }
-        .btn-start:active { transform: scale(0.95); }
-
-        #stat-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; font-size: 14px; border-top: 1px solid #222; }
-        #ad-box { height: 75px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        /* 하단 바 */
+        #stat-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
+        #ad-box { height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
-<body oncontextmenu="return false;" ondragstart="return false;">
+<body>
 
     <div id="game-area">
         <div id="canvas-box">
             <canvas id="cvs"></canvas>
             <div id="ovl">
                 <div id="title">Neon Runner</div>
-                <div id="sub-title">VISION TRAINING : AI ADAPTIVE</div>
-                <div id="ranking-box">
-                    <div class="rank-title">TOP 5 RANKING</div>
-                    <div id="rank-list"></div>
-                </div>
-                <button class="btn-start" id="start-btn">START TRAIN</button>
+                <div id="ranking-box" id="rank-list">
+                    </div>
+                <button class="btn-start" id="start-btn">START GAME</button>
             </div>
         </div>
     </div>
@@ -85,136 +82,101 @@
     </div>
 
     <script>
-    window.onload = function() {
-        const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
-        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn'), rankList = document.getElementById('rank-list');
+    const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
+    const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
 
-        let isLive = false, score = 0, isMobile;
-        let p, obs = [], cfg;
+    let isLive = false, score = 0, isMobile;
+    let p, obs = [], cfg;
 
-        // [핵심 Fix] 브라우저 화면 크기에 맞춰 캔버스 초기화 확실하게
-        const setupEnvironment = () => {
-            isMobile = window.innerWidth <= 600;
-            // CSS 비율(aspect-ratio)을 유지하면서 실제 그려질 픽셀 해상도 설정
-            if(isMobile) {
-                cvs.width = 500; cvs.height = 625; // 세로 4:5 비율 해상도
-            } else {
-                cvs.width = 1000; cvs.height = 500; // 가로 2:1 비율 해상도 (픽셀 더 선명하게 1000단위)
-            }
+    function initEnv() {
+        isMobile = window.innerWidth <= 600;
+        // 캔버스 자체의 픽셀 해상도 설정 (스타일 크기와 별개)
+        if (isMobile) {
+            cvs.width = 500; cvs.height = 625;
+        } else {
+            cvs.width = 1000; cvs.height = 500;
+        }
+        
+        const gY = cvs.height - 100;
+        p = { x: isMobile ? 80 : 150, y: gY - 60, dy: 0, jc: 0, hp: 3, inv: 0 };
+        cfg = { 
+            spd: isMobile ? 10 : 12, 
+            grav: isMobile ? 2.5 : 3.4, 
+            jump: isMobile ? -20 : -22,
+            next: 0, gap: isMobile ? 500 : 700 
         };
+        obs = []; score = 0;
+    }
 
-        const initGame = () => {
-            setupEnvironment();
-            // 바닥 좌표 (전체 높이의 80%)
-            const gY = cvs.height - 100;
-            p = { x: isMobile ? 80 : 150, y: gY - 60, dy: 0, jc: 0, hp: 3, inv: 0 };
-            cfg = { 
-                spd: isMobile ? 10 : 12, 
-                grav: isMobile ? 2.5 : 3.4, 
-                jump: isMobile ? -20 : -22,
-                next: 0, 
-                gap: isMobile ? 500 : 700 
-            };
-            obs = []; score = 0;
-        };
-
-        const updateRankingUI = () => {
-            let ranks = JSON.parse(localStorage.getItem('neon_ranks_v3') || "[]");
-            rankList.innerHTML = ranks.slice(0, 5).map((s, i) => 
-                `<div class="rank-item"><span>${i+1}ST</span><span>${Math.floor(s)}</span></div>`
-            ).join('') || "<div style='text-align:center; opacity:0.5;'>No Record</div>";
-            document.getElementById('top-score').innerText = "TOP: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
-        };
-
-        startBtn.onclick = (e) => {
-            e.stopPropagation();
-            // 게임 시작 직전에 해상도 재점검 (창크기 조절 대비)
-            initGame();
-            isLive = true;
-            ovl.style.display = 'none';
-        };
-
-        window.addEventListener('pointerdown', (e) => {
-            if(!isLive || e.target === startBtn) return;
-            if(p.jc < 2) { 
-                p.dy = cfg.jump; 
-                p.jc++; 
-            }
+    function updateRank() {
+        const ranks = JSON.parse(localStorage.getItem('neon_v4') || "[]");
+        const list = document.getElementById('ranking-box');
+        list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:5px;">TOP 5</div>';
+        ranks.slice(0, 5).forEach((s, i) => {
+            list.innerHTML += `<div class="rank-item"><span>${i+1}ST</span><span>${Math.floor(s)}</span></div>`;
         });
+        if(ranks.length === 0) list.innerHTML += '<div style="text-align:center;opacity:0.5;">No Record</div>';
+        document.getElementById('top-score').innerText = "TOP: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
+    }
 
-        // 색상 유틸리티 함수
-        const getCol = (name) => {
-            return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#fff";
-        };
+    startBtn.onclick = () => {
+        initEnv();
+        isLive = true;
+        ovl.style.display = 'none';
+    };
 
-        function loop() {
-            // [Fix] 매 프레임 그릴 때마다 현재 캔버스 높이에 비례한 바닥 좌표 계산
-            const gY = cvs.height - 100;
+    window.addEventListener('pointerdown', (e) => {
+        if(!isLive || e.target === startBtn) return;
+        if(p.jc < 2) { p.dy = cfg.jump; p.jc++; }
+    });
 
-            if(isLive) {
-                cfg.spd += 0.0015;
-                p.dy += cfg.grav; p.y += p.dy;
-                
-                // 바닥 착지 판정
-                if(p.y >= gY - 60) { p.y = gY - 60; p.dy = 0; p.jc = 0; }
-                
-                score += cfg.spd / 12;
-                cfg.next -= cfg.spd;
-
-                if(cfg.next <= 0) {
-                    let h = Math.random() > 0.7 ? 40 : 80;
-                    obs.push({ x: cvs.width + 50, y: gY - h, w: 32, h: h });
-                    // 속도에 비례한 간격 밸런싱
-                    cfg.next = (cfg.gap + Math.random() * 250) * (10 / cfg.spd);
-                }
-
-                obs.forEach((o, i) => {
-                    o.x -= cfg.spd;
-                    // 히트박스 판정
-                    if(p.inv <= 0 && p.x + 5 < o.x + o.w && p.x + 35 > o.x && p.y + 5 < o.y + o.h && p.y + 55 > o.y) {
-                        p.hp--; p.inv = 60;
-                        if(p.hp <= 0) {
-                            isLive = false;
-                            let ranks = JSON.parse(localStorage.getItem('neon_ranks_v3') || "[]");
-                            ranks.push(score); ranks.sort((a,b)=>b-a);
-                            localStorage.setItem('neon_ranks_v3', JSON.stringify(ranks.slice(0, 5)));
-                            updateRankingUI();
-                            ovl.style.display = 'flex';
-                        }
-                    }
-                    if(o.x < -100) obs.splice(i, 1);
-                });
-                if(p.inv > 0) p.inv--;
-                document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
+    function loop() {
+        const gY = cvs.height - 100;
+        if(isLive) {
+            cfg.spd += 0.0015;
+            p.dy += cfg.grav; p.y += p.dy;
+            if(p.y >= gY - 60) { p.y = gY - 60; p.dy = 0; p.jc = 0; }
+            score += cfg.spd / 12;
+            cfg.next -= cfg.spd;
+            if(cfg.next <= 0) {
+                let h = Math.random() > 0.7 ? 40 : 80;
+                obs.push({ x: cvs.width + 50, y: gY - h, w: 32, h: h });
+                cfg.next = (cfg.gap + Math.random() * 250) * (10 / cfg.spd);
             }
-
-            // 그리기 영역
-            ctx.fillStyle = getCol('--bg'); ctx.fillRect(0, 0, cvs.width, cvs.height);
-            
-            // 바닥선 (두껍고 입체감 있게)
-            ctx.strokeStyle = "#333"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(cvs.width, gY); ctx.stroke();
-            
-            // 캐릭터 (네온 블루 + 피격 시 깜빡임)
-            ctx.fillStyle = (p.inv % 10 < 5) ? "#00f2ff" : "rgba(0,242,255,0.2)";
-            ctx.fillRect(p.x, p.y, 40, 60); // 캐릭터 크기 약간 상향
-            
-            // 체력 표시 (골드 사각형)
-            ctx.fillStyle = getCol('--gold');
-            for(let i=0; i<p.hp; i++) ctx.fillRect(20 + (i*25), 20, 15, 15);
-
-            // 장애물 (네온 핑크)
-            ctx.fillStyle = "#ff0077";
-            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-
-            requestAnimationFrame(loop);
+            obs.forEach((o, i) => {
+                o.x -= cfg.spd;
+                if(p.inv <= 0 && p.x < o.x + o.w && p.x + 40 > o.x && p.y < o.y + o.h && p.y + 60 > o.y) {
+                    p.hp--; p.inv = 60;
+                    if(p.hp <= 0) {
+                        isLive = false;
+                        let r = JSON.parse(localStorage.getItem('neon_v4') || "[]");
+                        r.push(score); r.sort((a,b)=>b-a);
+                        localStorage.setItem('neon_v4', JSON.stringify(r.slice(0, 5)));
+                        updateRank();
+                        ovl.style.display = 'flex';
+                    }
+                }
+                if(o.x < -100) obs.splice(i, 1);
+            });
+            if(p.inv > 0) p.inv--;
+            document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
         }
 
-        // 초기화 및 루프 실행
-        setupEnvironment(); 
-        updateRankingUI();
-        loop();
-    };
+        ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, cvs.width, cvs.height);
+        ctx.strokeStyle = "#333"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(cvs.width, gY); ctx.stroke();
+        ctx.fillStyle = (p.inv % 10 < 5) ? "#00f2ff" : "rgba(0,242,255,0.2)";
+        ctx.fillRect(p.x, p.y, 40, 60);
+        ctx.fillStyle = "#ffcc00";
+        for(let i=0; i<p.hp; i++) ctx.fillRect(20 + (i*25), 20, 15, 15);
+        ctx.fillStyle = "#ff0077";
+        obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+        requestAnimationFrame(loop);
+    }
+
+    initEnv();
+    updateRank();
+    loop();
     </script>
 </body>
 </html>
