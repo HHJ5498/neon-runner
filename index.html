@@ -3,20 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: SIMPLE</title>
+    <title>NEON DASH: AD-READY</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>
+
     <style>
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; width: 100%; position: fixed; user-select: none; -webkit-user-select: none; touch-action: none; }
+        
+        /* 전체 레이아웃: 게임(위) + 상태바(중간) + 광고(아래) */
         body { font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; }
 
-        #game-view { position: relative; flex: 1; width: 100%; display: flex; flex-direction: column; background: #010103; overflow: hidden; }
-        canvas { width: 100%; height: auto; max-height: 70vh; margin: auto; display: block; }
+        #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #010103; overflow: hidden; }
+        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; }
 
         #stat-bar { 
-            width: 100%; height: 70px; background: #080808; border-top: 1px solid #333; 
+            width: 100%; height: 60px; background: #080808; border-top: 1px solid #333; 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 25px env(safe-area-inset-bottom); 
+            padding: 0 25px; 
+        }
+
+        /* 💡 광고 전용 구역 (화면 하단에 100px 고정) */
+        #ad-section {
+            width: 100%;
+            height: 100px;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-top: 1px solid #222;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .label { font-size: 10px; color: #555; font-weight: bold; }
@@ -24,26 +41,15 @@
         .fever-wrap { width: 60px; height: 8px; background: #111; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); }
 
-        /* 메뉴 잘림 방지: 최소한의 크기만 사용 */
         .overlay { 
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); 
             display: flex; flex-direction: column; justify-content: center; 
             align-items: center; z-index: 2000; padding: 10px;
         }
 
-        #rank-box { 
-            width: 220px; background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid #333; border-radius: 12px; padding: 10px; margin-bottom: 15px; 
-        }
+        #rank-box { width: 220px; background: rgba(255, 255, 255, 0.05); border: 1px solid #333; border-radius: 12px; padding: 10px; margin-bottom: 15px; }
         .rank-item { display: flex; justify-content: space-between; padding: 4px 0; color: #aaa; font-size: 13px; border-bottom: 1px solid #222; }
-
-        .btn-start { 
-            background: var(--neon-blue); color: #000; 
-            padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 50px; 
-            text-align: center; box-shadow: 0 0 15px var(--neon-blue);
-        }
-        .btn-start:active { transform: scale(0.9); opacity: 0.8; }
-
+        .btn-start { background: var(--neon-blue); color: #000; padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 50px; text-align: center; box-shadow: 0 0 15px var(--neon-blue); }
         #title { color: #fff; font-size: 24px; margin-bottom: 15px; font-weight: 900; letter-spacing: 2px; }
     </style>
 </head>
@@ -64,6 +70,16 @@
         <div><div class="label">SCORE</div><div id="score" class="val">0</div></div>
         <div><div class="label" style="text-align:center">FEVER</div><div class="fever-wrap"><div id="fever-fill"></div></div></div>
         <div style="text-align: right;"><div class="label">ENERGY</div><div id="coins" class="val" style="color:var(--gold);">0%</div></div>
+    </div>
+
+    <div id="ad-section">
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:320px;height:100px"
+             data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+             data-ad-slot="xxxxxxxxxx"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
     </div>
 
 <script>
@@ -103,7 +119,6 @@
         }
     };
 
-    // [최적화 물리] 일반 모드에서도 쫀득한 반응성을 위해 중력과 점프를 살짝 강화
     const p = { x: 120, y: 350, dy: 0, g: 1.4, j: -24, jCount: 0 };
     let obs = [], coins = [], trails = [];
 
@@ -123,44 +138,30 @@
 
     window.addEventListener('touchstart', (e) => {
         if(!game.isLive || e.target.closest('.btn-start')) return;
-        if(p.jCount < 2) {
-            p.dy = p.j; p.jCount++;
-            Audio.play(400, 'triangle', 0.1, 0.1);
-        }
+        if(p.jCount < 2) { p.dy = p.j; p.jCount++; Audio.play(400, 'triangle', 0.1, 0.1); }
         if(e.cancelable) e.preventDefault();
     }, { passive: false });
 
     function update() {
         if(!game.isLive) return;
         game.frame++;
-        
         let speed = (18 + (game.score/700)) * (game.fever ? 1.7 : 1); 
         game.score += speed / 10;
-
         p.dy += p.g; p.y += p.dy;
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
-
         if(game.frame % 2 === 0) trails.push({x: p.x, y: p.y, o: 0.5});
         trails.forEach((t, i) => { t.o -= 0.1; if(t.o <= 0) trails.splice(i, 1); });
-
-        if(game.fever) { 
-            if(game.frame % 1 === 0) game.gauge -= 0.5;
-            if(game.gauge <= 0) game.fever = false;
-        }
-
+        if(game.fever) { if(game.frame % 1 === 0) game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false; }
         if(!game.fever) {
             let rate = Math.max(22, 50 - Math.floor(game.score/1200));
             if(game.frame % rate === 0) obs.push({ x: 950, y: Math.random() > 0.5 ? 200 : 350, s: speed });
             if(game.frame % 30 === 0) coins.push({ x: 950, y: 150 + Math.random() * 200 });
         }
-
         obs.forEach((o, i) => {
             o.x -= o.s;
-            // 판정 여유 최대로 (억울한 죽음 방지)
             if(!game.fever && Math.abs((p.x+20) - (o.x+17)) < 22 && Math.abs((p.y+22) - (o.y+22)) < 25) game.end();
             if(o.x < -100) obs.splice(i, 1);
         });
-
         coins.forEach((c, i) => {
             c.x -= speed;
             if(game.fever) { c.x += (p.x - c.x) * 0.3; c.y += (p.y - c.y) * 0.3; }
@@ -173,7 +174,6 @@
             }
             if(c.x < -100) coins.splice(i, 1);
         });
-
         document.getElementById('score').innerText = Math.floor(game.score);
         document.getElementById('coins').innerText = Math.floor(game.gauge) + "%";
         document.getElementById('fever-fill').style.width = game.gauge + "%";
