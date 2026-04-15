@@ -12,22 +12,19 @@
         html, body { height: 100%; width: 100%; background: #000; font-family: sans-serif; color: white; overflow: hidden; }
         body { display: flex; flex-direction: column; }
 
-        /* 게임 영역 */
         #game-area { 
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center; 
             background: var(--bg); overflow: hidden; padding: 10px;
         }
 
-        /* [핵심] 모바일 세로 모드 vs PC 가로 모드 대응 */
+        /* 캔버스 박스: PC는 가로, 모바일은 세로 비율 유지 */
         #canvas-box { 
-            position: relative; width: 100%; max-width: 500px; 
-            /* 기본(PC) 가로 비율 */
-            aspect-ratio: 2 / 1; 
+            position: relative; width: 100%; max-width: 800px; 
+            aspect-ratio: 2 / 1; /* 기본 PC 가로 */
         }
 
-        /* 모바일 세로 모드 (화면 너비가 좁을 때) */
         @media (max-width: 600px) {
-            #canvas-box { aspect-ratio: 4 / 5; max-width: 100%; }
+            #canvas-box { aspect-ratio: 4 / 5; max-width: 400px; } /* 모바일 세로 */
         }
 
         canvas { width: 100%; height: 100%; background: #000; border: 2px solid #333; display: block; border-radius: 12px; }
@@ -38,14 +35,15 @@
             align-items: center; z-index: 1000; padding: 20px; border-radius: 12px; 
         }
 
-        #title { font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 5px; text-shadow: 0 0 15px var(--gold); text-align: center; }
-        #ranking-box { width: 100%; max-width: 220px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 10px; margin-bottom: 20px; border: 1px solid #333; }
-        .rank-title { font-size: 13px; color: var(--gold); text-align: center; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; font-weight: bold; }
-        .rank-item { display: flex; justify-content: space-between; font-size: 12px; margin: 4px 0; font-family: monospace; }
-        .btn-start { background: var(--gold); color: #000; padding: 15px 50px; font-size: 18px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; }
+        #title { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 10px; text-shadow: 0 0 15px var(--gold); text-align: center; }
+        #ranking-box { width: 100%; max-width: 240px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 10px; margin-bottom: 20px; border: 1px solid #333; }
+        .rank-title { font-size: 14px; color: var(--gold); text-align: center; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; font-weight: bold; }
+        .rank-item { display: flex; justify-content: space-between; font-size: 13px; margin: 4px 0; font-family: monospace; }
+        
+        .btn-start { background: var(--gold); color: #000; padding: 15px 50px; font-size: 18px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-start:active { transform: scale(0.95); }
 
-        /* 하단 바 및 광고 */
-        #stat-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 13px; border-top: 1px solid #222; }
+        #stat-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 14px; border-top: 1px solid #222; }
         #ad-box { height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
@@ -80,42 +78,43 @@
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn'), rankList = document.getElementById('rank-list');
 
-        let isLive = false, score = 0, isMobile = window.innerWidth <= 600;
-        
-        // 해상도 설정 (모바일 세로 / PC 가로 분기)
-        const setResolution = () => {
+        let isLive = false, score = 0, isMobile;
+        let p, obs = [], cfg;
+
+        // 해상도 및 게임 환경 설정
+        const setupEnvironment = () => {
             isMobile = window.innerWidth <= 600;
             if(isMobile) {
-                cvs.width = 500; cvs.height = 625; // 세로 비율
+                cvs.width = 500; cvs.height = 625; // 모바일 세로 비율
             } else {
-                cvs.width = 900; cvs.height = 450; // 가로 비율
+                cvs.width = 900; cvs.height = 450; // PC 가로 비율
             }
         };
-        setResolution();
-
-        let p, obs = [], cfg;
-        const groundY = () => cvs.height - 80;
 
         const initGame = () => {
-            p = { x: isMobile ? 50 : 100, y: groundY() - 50, dy: 0, jc: 0, hp: 3, inv: 0 };
+            setupEnvironment();
+            const gY = cvs.height - 80;
+            p = { x: isMobile ? 60 : 100, y: gY - 50, dy: 0, jc: 0, hp: 3, inv: 0 };
             cfg = { 
                 spd: isMobile ? 8 : 10, 
-                grav: isMobile ? 2.5 : 3.2, 
-                jump: isMobile ? -18 : -20,
+                grav: isMobile ? 2.2 : 3.0, 
+                jump: isMobile ? -17 : -19,
                 next: 0, 
-                gap: isMobile ? 400 : 650 
+                gap: isMobile ? 450 : 600 
             };
             obs = []; score = 0;
         };
 
         const updateRankingUI = () => {
-            let ranks = JSON.parse(localStorage.getItem('neon_ranks') || "[]");
-            rankList.innerHTML = ranks.slice(0, 5).map((s, i) => `<div class="rank-item"><span>${i+1}ST</span><span>${Math.floor(s)}</span></div>`).join('') || "No Record";
+            let ranks = JSON.parse(localStorage.getItem('neon_ranks_v2') || "[]");
+            rankList.innerHTML = ranks.slice(0, 5).map((s, i) => 
+                `<div class="rank-item"><span>${i+1}ST</span><span>${Math.floor(s)}</span></div>`
+            ).join('') || "<div style='text-align:center; opacity:0.5;'>No Record</div>";
             document.getElementById('top-score').innerText = "TOP: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
         };
 
-        startBtn.onclick = () => {
-            setResolution();
+        startBtn.onclick = (e) => {
+            e.stopPropagation();
             initGame();
             isLive = true;
             ovl.style.display = 'none';
@@ -123,32 +122,40 @@
 
         window.addEventListener('pointerdown', (e) => {
             if(!isLive || e.target === startBtn) return;
-            if(p.jc < 2) { p.dy = cfg.jump; p.jc++; }
+            if(p.jc < 2) { 
+                p.dy = cfg.jump; 
+                p.jc++; 
+            }
         });
 
         function loop() {
+            const gY = cvs.height - 80;
+
             if(isLive) {
-                cfg.spd += 0.0015;
+                cfg.spd += 0.0012;
                 p.dy += cfg.grav; p.y += p.dy;
-                if(p.y >= groundY() - 50) { p.y = groundY() - 50; p.dy = 0; p.jc = 0; }
+                
+                if(p.y >= gY - 50) { p.y = gY - 50; p.dy = 0; p.jc = 0; }
                 
                 score += cfg.spd / 15;
                 cfg.next -= cfg.spd;
+
                 if(cfg.next <= 0) {
                     let h = Math.random() > 0.7 ? 40 : 80;
-                    obs.push({ x: cvs.width + 50, y: groundY() - h, w: 30, h: h });
-                    cfg.next = cfg.gap + Math.random() * 200;
+                    obs.push({ x: cvs.width + 50, y: gY - h, w: 32, h: h });
+                    cfg.next = cfg.gap + Math.random() * 250;
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= cfg.spd;
-                    if(p.inv <= 0 && p.x < o.x + o.w && p.x + 40 > o.x && p.y < o.y + o.h && p.y + 50 > o.y) {
+                    // 히트박스 판정
+                    if(p.inv <= 0 && p.x + 5 < o.x + o.w && p.x + 35 > o.x && p.y + 5 < o.y + o.h && p.y + 45 > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) {
                             isLive = false;
-                            let ranks = JSON.parse(localStorage.getItem('neon_ranks') || "[]");
+                            let ranks = JSON.parse(localStorage.getItem('neon_ranks_v2') || "[]");
                             ranks.push(score); ranks.sort((a,b)=>b-a);
-                            localStorage.setItem('neon_ranks', JSON.stringify(ranks.slice(0, 5)));
+                            localStorage.setItem('neon_ranks_v2', JSON.stringify(ranks.slice(0, 5)));
                             updateRankingUI();
                             ovl.style.display = 'flex';
                         }
@@ -159,24 +166,29 @@
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
 
+            // 그리기 영역
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, cvs.width, cvs.height);
-            ctx.strokeStyle = "#333"; ctx.lineWidth = 3; ctx.strokeRect(-10, groundY(), cvs.width + 20, 5);
             
-            // 캐릭터
-            ctx.fillStyle = p.inv % 10 < 5 ? varColor('--neon') : "rgba(0,242,255,0.2)";
+            // 바닥선
+            ctx.strokeStyle = "#333"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(cvs.width, gY); ctx.stroke();
+            
+            // 캐릭터 (네온 블루)
+            ctx.fillStyle = (p.inv % 10 < 5) ? "#00f2ff" : "rgba(0,242,255,0.2)";
             ctx.fillRect(p.x, p.y, 40, 50);
             
-            // 체력
-            ctx.fillStyle = varColor('--gold');
+            // 체력 표시 (골드)
+            ctx.fillStyle = "#ffcc00";
             for(let i=0; i<p.hp; i++) ctx.fillRect(20 + (i*20), 20, 12, 12);
 
-            // 장애물
-            ctx.fillStyle = varColor('--pink');
+            // 장애물 (핑크)
+            ctx.fillStyle = "#ff0077";
             obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
 
             requestAnimationFrame(loop);
         }
-        const varColor = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+        setupEnvironment(); // 초기 실행 시 PC/모바일 감지
         updateRankingUI();
         loop();
     };
