@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: VS AI</title>
+    <title>NEON DASH: AI FIX</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
@@ -19,7 +19,7 @@
         }
         
         #game-view { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; background: #050508; overflow: hidden; }
-        canvas { max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1; touch-action: none; }
+        canvas { max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1; touch-action: none; background: #050508; }
         
         .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.94); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; overflow-y: auto; }
         .scroll-hint { font-size: 11px; color: var(--neon); margin-bottom: 5px; animation: bounce 1.5s infinite; }
@@ -27,9 +27,8 @@
         
         #title { font-size: 28px; font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 15px; }
         
-        /* 모드 선택 버튼 */
         .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 320px; }
-        .mode-btn { flex: 1; padding: 12px; border: 1px solid #444; background: #111; color: #888; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .mode-btn { flex: 1; padding: 12px; border: 1px solid #444; background: #111; color: #888; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
         .mode-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(0, 242, 255, 0.1); }
         .mode-btn.vs-active { border-color: var(--red); color: var(--red); background: rgba(255, 51, 0, 0.1); }
 
@@ -47,7 +46,7 @@
         .btn-start { background: var(--neon); color: #000; padding: 14px 60px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
 
         #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
-        #ad-area { width: 100%; min-height: 55px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #111; }
+        #ad-area { width: 100%; min-height: 55px; background: #000; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -55,12 +54,12 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div class="scroll-hint">▼ 모드 선택 및 설정</div>
+            <div class="scroll-hint">▼ 설정 및 모드 선택</div>
             <div id="title">NEON DASH AI</div>
             
             <div class="mode-selector">
                 <button id="btn-solo" class="mode-btn active">기본 모드</button>
-                <button id="btn-vs" class="mode-btn">AI 대결 (Red)</button>
+                <button id="btn-vs" class="mode-btn">AI 대결 모드</button>
             </div>
 
             <div class="rank-box">
@@ -70,7 +69,7 @@
 
             <div class="settings-box">
                 <div class="setting-item">
-                    <label>속도 설정 (1-24)</label>
+                    <label>속도 조절 (1-24)</label>
                     <input type="range" id="speed-slider" min="1" max="24" value="10">
                     <div id="speed-display" class="val-display">10</div>
                 </div>
@@ -81,13 +80,13 @@
                 </div>
             </div>
             
-            <button class="btn-start" id="start-btn">엔진 가동</button>
+            <button class="btn-start" id="start-btn">게임 시작</button>
         </div>
     </div>
 
     <div id="stat-bar">
         <div id="score-txt" style="font-weight:900; font-size:14px;">SCORE: 0</div>
-        <div id="vs-status" style="color:var(--red); font-weight:bold; font-size:12px; display:none;">AI ALIVE</div>
+        <div id="vs-status" style="color:var(--red); font-weight:bold; font-size:11px; display:none;">AI 준비완료</div>
         <div id="best-txt" style="color:var(--gold); font-size:14px;">BEST: 0</div>
     </div>
 
@@ -110,11 +109,11 @@
     const ovl = document.getElementById('ovl'), btnSolo = document.getElementById('btn-solo'), btnVs = document.getElementById('btn-vs');
 
     let config = { baseSpeed: 10, obsSize: 15, timer: 0, mode: 'solo' };
-    let p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: true };
-    let bot = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: false }; // AI 봇
+    let p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: false };
+    let bot = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: false }; 
     let obs = [], coins = [], isLive = false, score = 0, gauge = 0, isFever = false;
 
-    // 모드 선택 로직
+    // 모드 선택 버튼 이벤트
     btnSolo.onclick = () => { config.mode = 'solo'; btnSolo.classList.add('active'); btnVs.classList.remove('vs-active'); };
     btnVs.onclick = () => { config.mode = 'vs'; btnVs.classList.add('vs-active'); btnSolo.classList.remove('active'); };
 
@@ -129,13 +128,15 @@
     sSize.oninput = () => { config.obsSize = parseInt(sSize.value); dSize.innerText = sSize.value + "px"; };
 
     function startGame() {
-        isLive = true; score = 0; gauge = 0; isFever = false;
-        p.y = 350; p.dy = 0; p.jCount = 0; p.alive = true;
-        bot.y = 350; bot.dy = 0; bot.jCount = 0; bot.alive = (config.mode === 'vs');
-        obs = []; coins = [];
+        // 물리 및 상태 초기화 (멈춤 현상 방지)
+        isLive = true; score = 0; gauge = 0; isFever = false; obs = []; coins = []; config.timer = 100;
+        
+        p = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: true };
+        bot = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, alive: (config.mode === 'vs') };
+        
         ovl.style.display = 'none';
         document.getElementById('vs-status').style.display = bot.alive ? 'block' : 'none';
-        document.getElementById('vs-status').innerText = "AI ALIVE";
+        document.getElementById('vs-status').innerText = "AI 추격 중";
     }
 
     function gameOver() {
@@ -145,7 +146,7 @@
         ranks.sort((a,b) => b - a);
         localStorage.setItem('neon_ranks', JSON.stringify(ranks.slice(0, 10)));
         updateRankBoard();
-        document.getElementById('title').innerText = p.alive ? "AI DEFEATED!" : "ENGINE CRASHED";
+        document.getElementById('title').innerText = p.alive ? "AI 승리!" : "게임 종료";
         ovl.style.display = 'flex';
     }
 
@@ -176,54 +177,53 @@
         const f = applyAIPhysics(s);
         score += s / 15;
 
-        // 플레이어 물리
+        // 플레이어 처리
         if(p.alive) {
             p.g = f.g; p.dy += p.g; p.y += p.dy;
             if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
         }
 
-        // 빨간색 AI(봇) 로직
+        // AI 봇 처리 (장애물 감지 안정화)
         if(bot.alive) {
             bot.g = f.g; bot.dy += bot.g; bot.y += bot.dy;
             if(bot.y > 350) { bot.y = 350; bot.dy = 0; bot.jCount = 0; }
 
-            // AI 장애물 감지 및 점프 (지능형 예측)
-            obs.forEach(o => {
-                let dist = o.x - bot.x;
-                if(dist > 0 && dist < (150 + s * 5) && bot.jCount === 0) {
+            if (obs.length > 0) {
+                let nextObs = obs[0]; // 가장 가까운 장애물
+                let dist = nextObs.x - bot.x;
+                if(dist > 0 && dist < (160 + s * 4) && bot.jCount === 0) {
                     bot.dy = f.j1; bot.jCount++;
                 }
-                // 2단 점프가 필요한 높은 장애물 감지
-                if(dist > 0 && dist < 80 && o.y < 300 && bot.jCount === 1) {
+                if(dist > 0 && dist < 90 && nextObs.y < 300 && bot.jCount === 1) {
                     bot.dy = f.j2; bot.jCount++;
                 }
-            });
+            }
         }
 
+        // 장애물 스폰
         config.timer -= s;
         if(config.timer <= 0 && !isFever) {
             let py = Math.random() > 0.45 ? 395 : 240;
             obs.push({ x: 950, y: py - config.obsSize, w: config.obsSize, h: config.obsSize, s: s });
-            config.timer = (250 + Math.random() * 200) * (10 / s + 0.5);
+            config.timer = (280 + Math.random() * 200) * (10 / s + 0.5);
         }
 
+        // 코인 스폰
         if(Math.random() < 0.02) coins.push({ x: 950, y: 180 + Math.random() * 180 });
 
+        // 충돌 및 수거 로직
         obs.forEach((o, i) => {
             o.x -= o.s;
-            // 플레이어 충돌
             if(p.alive && !isFever && Math.abs((p.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((p.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
                 p.alive = false; if(!bot.alive) gameOver();
             }
-            // AI 충돌
             if(bot.alive && !isFever && Math.abs((bot.x + 20) - (o.x + o.w/2)) < (16 + o.w/2) && Math.abs((bot.y + 22) - (o.y + o.h/2)) < (18 + o.h/2)) {
-                bot.alive = false; document.getElementById('vs-status').innerText = "AI ELIMINATED";
+                bot.alive = false; document.getElementById('vs-status').innerText = "AI 탈락";
                 if(!p.alive) gameOver();
             }
             if(o.x < -100) obs.splice(i, 1);
         });
 
-        // 플레이어가 살아있을 때만 코인 획득 가능
         coins.forEach((c, i) => {
             c.x -= s;
             if(isFever && p.alive) { c.x += (p.x - c.x) * 0.25; c.y += (p.y - c.y) * 0.25; }
@@ -246,18 +246,14 @@
         ctx.strokeStyle = isFever ? COLORS.pink : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
         
-        // 플레이어 (하늘색/금색)
         if(p.alive) {
             ctx.fillStyle = isFever ? '#fff' : (p.jCount === 2 ? COLORS.gold : COLORS.neon);
             ctx.fillRect(p.x, p.y, 40, 45);
         }
 
-        // AI 봇 (빨간색)
         if(bot.alive) {
-            ctx.fillStyle = COLORS.red;
-            ctx.globalAlpha = 0.7; // 봇은 살짝 투명하게 해서 겹쳐도 보이게
-            ctx.fillRect(bot.x, bot.y, 40, 45);
-            ctx.globalAlpha = 1.0;
+            ctx.fillStyle = COLORS.red; ctx.globalAlpha = 0.6;
+            ctx.fillRect(bot.x, bot.y, 40, 45); ctx.globalAlpha = 1.0;
         }
 
         ctx.fillStyle = COLORS.pink;
