@@ -57,20 +57,16 @@
              data-ad-client="ca-pub-7503206245117361"
              data-ad-slot="9998817128"></ins>
         <script>
-            // 애드센스 로딩 중 에러가 발생해도 게임에 영향을 주지 않도록 예외 처리
-            try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) { console.log("Ad Blocked or Load Error"); }
+            try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) { console.log("Ad Blocked"); }
         </script>
     </div>
 
     <script>
-    // 1. 캔버스 및 드로잉 설정
     const cvs = document.getElementById('cvs');
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
-    // 캔버스 전용 색상 상수 (CSS 변수가 깨져도 무조건 작동)
     const C = { BLUE: '#00f2ff', PINK: '#ff0077', GOLD: '#ffcc00', BG: '#050508' };
-
     const slider = document.getElementById('speed-slider');
     const display = document.getElementById('speed-display');
     const ovl = document.getElementById('ovl');
@@ -84,7 +80,7 @@
 
     const game = {
         isLive: false, score: 0, gauge: 0, fever: false,
-        patterns: [{y:350}, {y:350, next:200}, {y:200}, {y:350, next:350}],
+        patterns: [{y:365}, {y:365, next:220}, {y:220}, {y:365, next:365}], // Y값 하향 조정 (바닥 밀착)
         start() {
             this.isLive = true; this.score = 0; this.gauge = 0;
             p.y = 350; p.dy = 0; p.jCount = 0;
@@ -101,25 +97,23 @@
     const p = { x: 120, y: 350, dy: 0, jCount: 0 };
     let obs = [], coins = [];
 
-    // 2. 스마트 AI 엔진 (물리 및 패턴)
     function syncAI(speed) {
-        // 속도가 빠를수록 중력을 높여서 반응성 강화
         p.g = speed < 9 ? 0.7 + (speed * 0.05) : 1.1 + (speed * 0.04);
-        config.j1 = -(17 + (speed * 0.7)); // 1단 점프
-        config.j2 = config.j1 * 0.82;      // 2단 점프
+        config.j1 = -(17 + (speed * 0.7)); 
+        config.j2 = config.j1 * 0.82;      
     }
 
     function spawnAI(speed) {
         const pattern = game.patterns[Math.floor(Math.random() * game.patterns.length)];
-        obs.push({ x: 950, y: pattern.y, s: speed });
+        // 장애물 크기를 작게 정의 (w: 25, h: 30)
+        obs.push({ x: 950, y: pattern.y, s: speed, w: 25, h: 30 });
         if(pattern.next) {
             setTimeout(() => {
-                if(game.isLive) obs.push({ x: 950, y: pattern.next, s: speed });
-            }, 5000 / speed); // 속도 비례 안전 간격 계산
+                if(game.isLive) obs.push({ x: 950, y: pattern.next, s: speed, w: 25, h: 30 });
+            }, 4500 / speed); 
         }
     }
 
-    // 3. 입력 시스템 (PC/모바일 터치 간섭 방지)
     function action(e) {
         if (!game.isLive || e.target.id === 'speed-slider') return;
         if (p.jCount < 2) {
@@ -133,7 +127,6 @@
     window.addEventListener('mousedown', action);
     window.addEventListener('touchstart', action, { passive: false });
 
-    // 4. 메인 루프
     function update() {
         if(!game.isLive) return;
         
@@ -154,8 +147,11 @@
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            let hitW = p.jCount === 2 ? 22 : 28; // 2단 점프 중엔 히트박스 보너스
-            if(!game.fever && Math.abs(p.x + 20 - (o.x + 17)) < hitW && Math.abs(p.y + 22 - (o.y + 22)) < 30) {
+            // 💡 정교해진 히트박스 판정 (장애물이 작아졌으므로 판정 범위도 축소)
+            // 유저: x+20(중심), y+22(중심) / 장애물: o.x+12.5(중심), o.y+15(중심)
+            if(!game.fever && 
+               Math.abs((p.x + 20) - (o.x + 12.5)) < 22 && 
+               Math.abs((p.y + 22) - (o.y + 15)) < 28) {
                 game.over();
             }
             if(o.x < -100) obs.splice(i, 1);
@@ -184,11 +180,13 @@
         ctx.strokeStyle = game.fever ? C.PINK : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
         
+        // 🟦 플레이어 (40x45)
         ctx.fillStyle = game.fever ? '#fff' : (p.jCount === 2 ? C.GOLD : C.BLUE);
         ctx.fillRect(p.x, p.y, 40, 45);
 
+        // 🟥 장애물 (25x30) - 더 작고 날렵하게 수정
         ctx.fillStyle = C.PINK;
-        obs.forEach(o => ctx.fillRect(o.x, o.y, 35, 45));
+        obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
         
         ctx.fillStyle = C.GOLD;
         coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
@@ -200,7 +198,6 @@
         requestAnimationFrame(loop);
     }
 
-    // 엔진 가동
     loop();
     </script>
 </body>
