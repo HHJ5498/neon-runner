@@ -3,55 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: AD-READY</title>
+    <title>NEON DASH: APP VERSION</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; width: 100%; position: fixed; user-select: none; -webkit-user-select: none; touch-action: none; }
         
-        /* 전체 레이아웃: 게임(위) + 상태바(중간) + 광고(아래) */
-        body { font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; }
-
-        #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #010103; overflow: hidden; }
-        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; }
-
-        #stat-bar { 
-            width: 100%; height: 60px; background: #080808; border-top: 1px solid #333; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 25px; 
+        html, body { 
+            height: 100%; margin: 0; padding: 0; background: #000; 
+            overflow: hidden; width: 100%; position: fixed; 
+            display: flex; flex-direction: column;
         }
 
-        /* 💡 광고 전용 구역 (화면 하단에 100px 고정) */
-        #ad-section {
+        /* 게임 화면 영역 */
+        #game-view { 
+            position: relative; flex: 1; width: 100%; 
+            display: flex; background: #010103; overflow: hidden; 
+        }
+        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; }
+
+        /* 상태바 */
+        #stat-bar { 
+            width: 100%; height: 55px; background: #080808; border-top: 1px solid #333; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 20px; 
+        }
+
+        /* 💡 하단 고정 광고 영역 (가장 중요) */
+        #ad-bottom-zone {
             width: 100%;
-            height: 100px;
+            height: 60px;
             background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
             border-top: 1px solid #222;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
         .label { font-size: 10px; color: #555; font-weight: bold; }
-        .val { color: white; font-size: 18px; font-weight: 900; }
+        .val { color: white; font-size: 16px; font-weight: 900; }
         .fever-wrap { width: 60px; height: 8px; background: #111; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink)); }
 
         .overlay { 
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); 
             display: flex; flex-direction: column; justify-content: center; 
-            align-items: center; z-index: 2000; padding: 10px;
+            align-items: center; z-index: 2000;
         }
-
-        #rank-box { width: 220px; background: rgba(255, 255, 255, 0.05); border: 1px solid #333; border-radius: 12px; padding: 10px; margin-bottom: 15px; }
-        .rank-item { display: flex; justify-content: space-between; padding: 4px 0; color: #aaa; font-size: 13px; border-bottom: 1px solid #222; }
-        .btn-start { background: var(--neon-blue); color: #000; padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 50px; text-align: center; box-shadow: 0 0 15px var(--neon-blue); }
-        #title { color: #fff; font-size: 24px; margin-bottom: 15px; font-weight: 900; letter-spacing: 2px; }
+        .btn-start { background: var(--neon-blue); color: #000; padding: 12px 35px; font-size: 18px; font-weight: 900; border-radius: 50px; box-shadow: 0 0 15px var(--neon-blue); }
+        #title { color: #fff; font-size: 24px; margin-bottom: 15px; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -60,88 +63,52 @@
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
             <div id="title">NEON DASH</div>
-            <div id="rank-box">
-                <div id="rank-list"></div>
-            </div>
             <div class="btn-start" ontouchstart="game.start()">게임 시작</div>
         </div>
     </div>
 
     <div id="stat-bar">
         <div><div class="label">SCORE</div><div id="score" class="val">0</div></div>
-        <div><div class="label" style="text-align:center">FEVER</div><div class="fever-wrap"><div id="fever-fill"></div></div></div>
-        <div style="text-align: right;"><div class="label">ENERGY</div><div id="coins" class="val" style="color:var(--gold);">0%</div></div>
+        <div><div class="label">FEVER</div><div class="fever-wrap"><div id="fever-fill"></div></div></div>
+        <div><div class="label">ENERGY</div><div id="coins" class="val" style="color:var(--gold);">0%</div></div>
     </div>
 
-    <div id="ad-section">
+    <div id="ad-bottom-zone">
         <ins class="adsbygoogle"
-             style="display:block"
+             style="display:inline-block;width:320px;height:50px"
              data-ad-client="ca-pub-7503206245117361"
-             data-ad-slot="YOUR_AD_SLOT_HERE"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
+             data-ad-slot="9998817128"></ins>
         <script>
              (adsbygoogle = window.adsbygoogle || []).push({});
         </script>
     </div>
 
 <script>
+    // --- 게임 로직 시작 ---
     const cvs = document.getElementById('cvs');
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
-    const Rank = {
-        save(s) {
-            let r = JSON.parse(localStorage.getItem('nd_rank_s') || '[0,0,0]');
-            r.push(Math.floor(s)); r.sort((a,b)=>b-a); r = r.slice(0,3);
-            localStorage.setItem('nd_rank_s', JSON.stringify(r));
-            this.show();
-        },
-        show() {
-            const r = JSON.parse(localStorage.getItem('nd_rank_s') || '[0,0,0]');
-            document.getElementById('rank-list').innerHTML = r.map((v,i)=>`
-                <div class="rank-item"><span>${i+1}위</span><span>${v.toLocaleString()}m</span></div>`).join('');
-        }
-    };
-    Rank.show();
-
     const game = {
         isLive: false, score: 0, gauge: 0, frame: 0, fever: false,
         start() {
-            Audio.init(); this.isLive = true;
-            this.score = 0; this.gauge = 0; this.frame = 0; this.fever = false;
-            p.y = 350; p.dy = 0; p.jCount = 0;
-            obs = []; coins = []; trails = [];
+            this.isLive = true; this.score = 0; this.gauge = 0; this.frame = 0;
+            p.y = 350; p.dy = 0; obs = []; coins = [];
             document.getElementById('ovl').style.display = 'none';
         },
         end() {
-            this.isLive = false; Audio.play(60, 'square', 0.5, 0.2);
-            Rank.save(this.score);
+            this.isLive = false;
             document.getElementById('title').innerText = "GAME OVER";
             document.getElementById('ovl').style.display = 'flex';
         }
     };
 
     const p = { x: 120, y: 350, dy: 0, g: 1.4, j: -24, jCount: 0 };
-    let obs = [], coins = [], trails = [];
-
-    const Audio = {
-        ctx: null,
-        init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); },
-        play(f, t, d, v) {
-            if(!this.ctx) return;
-            const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-            o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
-            g.gain.setValueAtTime(v, this.ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + d);
-            o.connect(g); g.connect(this.ctx.destination);
-            o.start(); o.stop(this.ctx.currentTime + d);
-        }
-    };
+    let obs = [], coins = [];
 
     window.addEventListener('touchstart', (e) => {
         if(!game.isLive || e.target.closest('.btn-start')) return;
-        if(p.jCount < 2) { p.dy = p.j; p.jCount++; Audio.play(400, 'triangle', 0.1, 0.1); }
+        if(p.jCount < 2) { p.dy = p.j; p.jCount++; }
         if(e.cancelable) e.preventDefault();
     }, { passive: false });
 
@@ -152,31 +119,29 @@
         game.score += speed / 10;
         p.dy += p.g; p.y += p.dy;
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
-        if(game.frame % 2 === 0) trails.push({x: p.x, y: p.y, o: 0.5});
-        trails.forEach((t, i) => { t.o -= 0.1; if(t.o <= 0) trails.splice(i, 1); });
-        if(game.fever) { if(game.frame % 1 === 0) game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false; }
+
         if(!game.fever) {
-            let rate = Math.max(22, 50 - Math.floor(game.score/1200));
-            if(game.frame % rate === 0) obs.push({ x: 950, y: Math.random() > 0.5 ? 200 : 350, s: speed });
-            if(game.frame % 30 === 0) coins.push({ x: 950, y: 150 + Math.random() * 200 });
+            if(game.frame % 30 === 0) obs.push({ x: 950, y: Math.random() > 0.5 ? 200 : 350, s: speed });
+            if(game.frame % 40 === 0) coins.push({ x: 950, y: 150 + Math.random() * 200 });
+        } else {
+            game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false;
         }
+
         obs.forEach((o, i) => {
             o.x -= o.s;
-            if(!game.fever && Math.abs((p.x+20) - (o.x+17)) < 22 && Math.abs((p.y+22) - (o.y+22)) < 25) game.end();
-            if(o.x < -100) obs.splice(i, 1);
+            if(!game.fever && Math.abs(p.x - o.x) < 30 && Math.abs(p.y - o.y) < 30) game.end();
+            if(o.x < -50) obs.splice(i, 1);
         });
+
         coins.forEach((c, i) => {
             c.x -= speed;
-            if(game.fever) { c.x += (p.x - c.x) * 0.3; c.y += (p.y - c.y) * 0.3; }
             if(Math.abs(p.x - c.x) < 50 && Math.abs(p.y - c.y) < 50) {
-                coins.splice(i, 1); Audio.play(1100, 'sine', 0.05, 0.1);
-                if(!game.fever) {
-                    game.gauge = Math.min(100, game.gauge + 7);
-                    if(game.gauge >= 100) { game.fever = true; Audio.play(800, 'sine', 0.2, 0.1); }
-                }
+                coins.splice(i, 1);
+                game.gauge = Math.min(100, game.gauge + 10);
+                if(game.gauge >= 100) game.fever = true;
             }
-            if(c.x < -100) coins.splice(i, 1);
         });
+
         document.getElementById('score').innerText = Math.floor(game.score);
         document.getElementById('coins').innerText = Math.floor(game.gauge) + "%";
         document.getElementById('fever-fill').style.width = game.gauge + "%";
@@ -186,9 +151,7 @@
         ctx.fillStyle = '#010103'; ctx.fillRect(0,0,900,450);
         ctx.strokeStyle = game.fever ? '#ff0077' : '#00f2ff';
         ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
-        trails.forEach(t => { ctx.globalAlpha = t.o; ctx.fillStyle = '#00f2ff'; ctx.fillRect(t.x, t.y, 40, 45); });
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = game.fever ? '#fff' : '#00f2ff'; ctx.fillRect(p.x, p.y, 40, 45);
+        ctx.fillStyle = '#00f2ff'; ctx.fillRect(p.x, p.y, 40, 45);
         ctx.fillStyle = '#ff0077'; obs.forEach(o => { ctx.fillRect(o.x, o.y, 35, 45); });
         ctx.fillStyle = '#ffcc00'; coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
     }
