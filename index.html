@@ -3,28 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner Final Fix</title>
+    <title>Neon Runner</title>
+    
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
+
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
+        
+        html, body { 
+            height: 100%; width: 100%; 
+            background: #000; overflow: hidden; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            color: white; 
+        }
         body { display: flex; flex-direction: column; }
-        #game-area { flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg); padding: 10px; overflow: hidden; }
-        #canvas-box { position: relative; width: 100%; max-width: 600px; max-height: 45vh; aspect-ratio: 2 / 1; margin-top: 10px; }
-        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #444; display: block; border-radius: 12px; }
-        #ovl { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; border-radius: 12px; }
-        #title { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 8px; text-shadow: 0 0 10px var(--gold); }
-        .controls { width: 100%; max-width: 280px; background: rgba(255,255,255,0.07); padding: 12px; border-radius: 15px; margin-bottom: 12px; }
-        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
-        .badge { background: var(--gold); color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-        input[type="range"] { width: 100%; height: 6px; accent-color: var(--gold); margin: 8px 0 15px; cursor: pointer; }
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .diff-btn { background: #333; border: 1px solid #555; color: #aaa; padding: 12px 0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .diff-btn.active { background: var(--gold); color: #000; border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
-        .btn-start { background: var(--gold); color: #000; padding: 15px 60px; font-size: 20px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; }
-        #stat-bar { height: 45px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; font-size: 14px; font-weight: bold; border-top: 1px solid #333; }
-        #ad-box { height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+
+        /* 게임 영역: 캔버스가 잘리지 않도록 45vh로 제한 */
+        #game-area {
+            flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-start;
+            background: var(--bg); padding: 10px; overflow: hidden;
+        }
+
+        #canvas-box {
+            position: relative; width: 100%; max-width: 600px; 
+            max-height: 45vh; 
+            aspect-ratio: 2 / 1;
+            margin-top: 10px;
+        }
+
+        canvas { 
+            width: 100%; height: 100%; background: #000; 
+            border: 2px solid #333; display: block; border-radius: 12px; 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+        }
+
+        /* 오버레이 메뉴 */
+        #ovl {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; padding: 15px; border-radius: 12px;
+        }
+
+        #title { 
+            font-size: 28px; font-weight: 900; color: var(--gold); 
+            margin-bottom: 15px; letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--gold);
+        }
+
+        .controls {
+            width: 100%; max-width: 280px; background: rgba(255, 255, 255, 0.07);
+            padding: 15px; border-radius: 15px; margin-bottom: 15px;
+        }
+        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; margin-bottom: 8px; }
+        .badge { background: var(--gold); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .diff-btn { 
+            background: #222; border: 1px solid #444; color: #888; padding: 12px 0;
+            border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold;
+            transition: 0.2s;
+        }
+        .diff-btn.active { 
+            background: var(--gold); color: #000; border-color: var(--gold); 
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .btn-start { 
+            background: var(--gold); color: #000; padding: 16px 60px; 
+            font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.3);
+        }
+
+        /* 하단 정보바 */
+        #stat-bar { 
+            height: 45px; background: #111; display: flex; 
+            justify-content: space-between; align-items: center; 
+            padding: 0 25px; font-size: 14px; font-weight: bold; 
+            border-top: 1px solid #222; 
+        }
+        
+        /* 광고 박스 */
+        #ad-box { 
+            height: 75px; background: #000; 
+            display: flex; justify-content: center; align-items: center; 
+            border-top: 1px solid #222; 
+        }
     </style>
 </head>
 <body oncontextmenu="return false;" ondragstart="return false;">
@@ -32,12 +96,12 @@
     <div id="game-area">
         <div id="canvas-box">
             <canvas id="cvs"></canvas>
+            
             <div id="ovl">
                 <div id="title">NEON RUNNER</div>
+                
                 <div class="controls">
-                    <div class="label-row"><span>SPEED</span><span id="s-val" class="badge">12</span></div>
-                    <input type="range" id="s-input" min="1" max="18" value="12">
-                    <div class="label-row"><span>DIFFICULTY</span><span id="d-val" class="badge">2</span></div>
+                    <div class="label-row"><span>DIFFICULTY (INTERVALS)</span><span id="d-val" class="badge">2</span></div>
                     <div class="diff-grid">
                         <button class="diff-btn" data-v="1">1</button>
                         <button class="diff-btn active" data-v="2">2</button>
@@ -46,7 +110,8 @@
                         <button class="diff-btn" data-v="5">5</button>
                     </div>
                 </div>
-                <button class="btn-start" id="start-btn">GAME START</button>
+                
+                <button class="btn-start" id="start-btn">START TRAIN</button>
             </div>
         </div>
     </div>
@@ -57,7 +122,10 @@
     </div>
 
     <div id="ad-box">
-        <ins class="adsbygoogle" style="display:block; width:320px; height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9285335402"></ins>
+        <ins class="adsbygoogle"
+             style="display:block; width:320px; height:50px"
+             data-ad-client="ca-pub-7503206245117361"
+             data-ad-slot="9285335402"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
@@ -65,135 +133,123 @@
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         cvs.width = 900; cvs.height = 450;
+
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
-        const sInput = document.getElementById('s-input'), sVal = document.getElementById('s-val');
         const dBtn = document.querySelectorAll('.diff-btn');
 
         let isLive = false, score = 0, curLv = 2;
         let p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
-        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.4 }; 
+        let obs = [], cfg = { spd: 12, nextDist: 0, grav: 3.4, gap: 550 }; 
 
-        // [최종 튜닝] PC 마우스에서 가장 쾌적한 물리 값
+        // [물리 설정] PC/모바일 통합 가변 점프 (꾹 누르면 세짐)
         const JUMP_PARAMS = { baseForce: -21, holdForce: -4.0, maxHoldTime: 18 };
 
-        const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_final_fix_v5') || "[0,0,0]");
-            document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
+        // [난이도 설정] 일정 간격(gap) 장애물 생성 로직
+        const lvSettings = {
+            1: { spd: 9,  gap: 820, grav: 3.0 },
+            2: { spd: 13, gap: 580, grav: 3.4 },
+            3: { spd: 17, gap: 420, grav: 3.8 },
+            4: { spd: 21, gap: 320, grav: 4.2 },
+            5: { spd: 25, gap: 260, grav: 4.7 }
         };
-        const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_final_fix_v5') || "[0,0,0]");
-            rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_final_fix_v5', JSON.stringify(rs.slice(0,3)));
-            syncRanks();
-        };
-        syncRanks();
 
-        sInput.oninput = () => { sVal.innerText = sInput.value; };
-        dBtn.forEach(b => { b.onclick = (e) => {
-            e.stopPropagation();
-            dBtn.forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            curLv = parseInt(b.dataset.v);
-            document.getElementById('d-val').innerText = curLv;
-        }; });
+        const syncTop = () => {
+            let top = localStorage.getItem('neon_runner_top') || 0;
+            document.getElementById('top-score').innerText = "TOP: " + Math.floor(top);
+        };
+        const saveTop = (s) => {
+            let top = localStorage.getItem('neon_runner_top') || 0;
+            if(s > top) localStorage.setItem('neon_runner_top', s);
+            syncTop();
+        };
+        syncTop();
+
+        dBtn.forEach(b => {
+            b.onclick = (e) => {
+                e.stopPropagation();
+                dBtn.forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                curLv = parseInt(b.dataset.v);
+                document.getElementById('d-val').innerText = curLv;
+            };
+        });
 
         startBtn.onclick = function(e) {
             e.stopPropagation();
-            const baseSpd = parseInt(sInput.value);
-            const lvMap = {
-                1: { grav: 2.8, spdMul: 0.7, fMin: 500, fMax: 800 },
-                2: { grav: 3.4, spdMul: 1.0, fMin: 300, fMax: 600 }, 
-                3: { grav: 3.8, spdMul: 1.2, fMin: 200, fMax: 450 },
-                4: { grav: 4.1, spdMul: 1.4, fMin: 150, fMax: 300 },
-                5: { grav: 4.4, spdMul: 1.7, fMin: 80,  fMax: 180 }
-            };
-            const s = lvMap[curLv];
-            cfg.spd = baseSpd * s.spdMul; cfg.grav = s.grav; cfg.freqMin = s.fMin; cfg.freqMax = s.fMax;
+            const s = lvSettings[curLv];
+            cfg.spd = s.spd; cfg.gap = s.gap; cfg.grav = s.grav;
             p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
-            obs = []; score = 0; isLive = true; cfg.timer = 0;
+            obs = []; score = 0; isLive = true; cfg.nextDist = 0;
             ovl.style.display = 'none';
         };
 
-        // [PC 전용 핵심 수정] 이벤트 리스너를 더 강력하게 교체
+        // 점프 이벤트 (PointerEvent로 통합)
         const startJump = (e) => {
             if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
-            
-            // 마우스 왼쪽 버튼 혹은 터치만 허용
             if (e.pointerType === 'mouse' && e.button !== 0) return;
-            
             if (e.pointerType === 'touch') e.preventDefault();
 
             if(p.jc < 2) {
                 p.dy = (p.jc === 0) ? JUMP_PARAMS.baseForce : JUMP_PARAMS.baseForce * 0.95;
-                p.jc++; 
-                p.isJumping = true; 
-                p.jumpTime = 0;
+                p.jc++; p.isJumping = true; p.jumpTime = 0;
             }
         };
+        const endJump = () => p.isJumping = false;
 
-        const endJump = (e) => {
-            p.isJumping = false;
-        };
-
-        // 브라우저 기본 동작 방지 및 이벤트 연결
         window.addEventListener('pointerdown', startJump, { passive: false });
         window.addEventListener('pointerup', endJump);
-        window.addEventListener('pointerleave', endJump); // 마우스가 화면 밖으로 나가도 취소되게
-
-        function drawHeart(x, y, s, col, empty) {
-            ctx.save(); ctx.translate(x, y); ctx.beginPath();
-            ctx.bezierCurveTo(-s/2,-s/2,-s,s/4,0,s); ctx.bezierCurveTo(s,s/4,s/2,-s/2,0,0);
-            ctx.fillStyle = empty ? "#222" : col; ctx.fill(); ctx.restore();
-        }
+        window.addEventListener('pointercancel', endJump);
 
         function loop() {
             if(isLive) {
-                let s = cfg.spd + (score / (2000 / curLv)); 
-                
-                // 가변 점프 물리 로직 (Hold 로직)
-                if (p.isJumping) {
-                    if (p.jumpTime < JUMP_PARAMS.maxHoldTime) {
-                        p.dy += JUMP_PARAMS.holdForce; 
-                        p.jumpTime++;
-                    } else {
-                        p.isJumping = false;
-                    }
-                }
+                let currentSpd = cfg.spd + (score / 1200);
 
-                p.dy += cfg.grav; 
-                p.y += p.dy;
+                // 가변 점프 로직
+                if (p.isJumping && p.jumpTime < JUMP_PARAMS.maxHoldTime) {
+                    p.dy += JUMP_PARAMS.holdForce; p.jumpTime++;
+                } else { p.isJumping = false; }
+
+                p.dy += cfg.grav; p.y += p.dy;
 
                 if(p.y >= 350) { p.y = 350; p.dy = 0; p.jc = 0; p.isJumping = false; }
                 
                 if(p.inv > 0) p.inv--;
-                score += s/8; cfg.timer -= s;
+                score += currentSpd / 12;
+                cfg.nextDist -= currentSpd;
 
-                if(cfg.timer <= 0) {
-                    let h = Math.random() > 0.5 ? 30 : 75; 
-                    obs.push({ x: 950, y: 400-h, w: 35, h: h, s: s });
-                    cfg.timer = (cfg.freqMin + Math.random() * (cfg.freqMax - cfg.freqMin)) * (15/s);
+                // [핵심] 일정한 간격 생성
+                if(cfg.nextDist <= 0) {
+                    let h = Math.random() > 0.45 ? 35 : 75; 
+                    obs.push({ x: 950, y: 400-h, w: 32, h: h, s: currentSpd });
+                    cfg.nextDist = cfg.gap; 
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
                     if(p.inv <= 0 && p.x+15 < o.x+o.w && p.x+25 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
                         p.hp--; p.inv = 60;
-                        if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
+                        if(p.hp <= 0) { isLive = false; saveTop(score); ovl.style.display = 'flex'; }
                     }
                     if(o.x < -100) obs.splice(i, 1);
                 });
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
 
+            // 그리기
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
-            ctx.strokeStyle = "#444"; ctx.lineWidth = 1; ctx.strokeRect(0, 400, 900, 1);
+            ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 400, 900, 1);
             
-            for(let i=0; i<3; i++) drawHeart(40+(i*30), 40, 12, "#ffcc00", i >= p.hp);
+            // 체력 (하트 대신 깔끔한 사각형)
+            ctx.fillStyle = p.hp > 1 ? "#ffcc00" : "#ff0077";
+            for(let i=0; i<p.hp; i++) ctx.fillRect(40+(i*25), 40, 15, 15);
             
+            // 캐릭터 (2단 점프 피드백 포함)
             ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0,242,255,0.2)");
             ctx.fillRect(p.x, p.y, 40, 50);
             
-            ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+            // 장애물
+            ctx.fillStyle = "#ff0077"; 
+            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
             
             requestAnimationFrame(loop);
         }
