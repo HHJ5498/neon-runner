@@ -3,67 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner High-Jump</title>
-    
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
-
+    <title>Neon Runner Difficulty Master</title>
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; touch-action: none; }
-        html, body { height: 100dvh; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
+        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
         body { display: flex; flex-direction: column; }
 
+        /* 게임 영역: 모바일 버튼 잘림 방지 (안전 비율 45vh) */
         #game-area {
-            flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
+            flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-start;
             background: var(--bg); padding: 5px; overflow: hidden;
         }
 
         #canvas-box {
-            position: relative; width: 100%; max-width: 800px; 
-            max-height: 55vh; 
+            position: relative; width: 100%; max-width: 600px; 
+            max-height: 45vh; 
             aspect-ratio: 2 / 1;
+            margin-top: 15px;
         }
 
-        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #333; display: block; border-radius: 12px; }
+        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #444; display: block; border-radius: 8px; }
 
         #ovl {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.94);
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 1000; padding: 10px;
         }
 
-        #title { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 10px; }
-
-        .rank-list {
-            width: 200px; background: rgba(255,255,255,0.05);
-            border-radius: 10px; padding: 6px; margin-bottom: 10px; border: 1px solid rgba(255,204,0,0.2);
-        }
-        .rank-row { display: flex; justify-content: space-between; padding: 2px 8px; font-size: 11px; }
+        #title { font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 5px; }
 
         .controls {
-            width: 290px; background: rgba(255,255,255,0.03);
-            padding: 12px; border-radius: 12px; margin-bottom: 15px;
+            width: 100%; max-width: 260px; background: rgba(255,255,255,0.05);
+            padding: 10px; border-radius: 12px; margin-bottom: 10px;
         }
-        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; margin-bottom: 5px; }
-        .badge { background: var(--gold); color: #000; padding: 1px 6px; border-radius: 4px; font-size: 10px; }
+        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; margin-bottom: 3px; }
+        .badge { background: var(--gold); color: #000; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
 
-        input[type="range"] { width: 100%; height: 5px; accent-color: var(--gold); margin: 8px 0 12px; cursor: pointer; }
+        input[type="range"] { width: 100%; height: 4px; accent-color: var(--gold); margin: 5px 0 10px; }
 
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .diff-btn { 
-            background: #222; border: 1px solid #444; color: #888; padding: 8px 0;
-            border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
-        }
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        .diff-btn { background: #222; border: 1px solid #444; color: #888; padding: 10px 0; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .diff-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
         .btn-start { 
-            background: var(--gold); color: #000; padding: 12px 60px; 
-            font-size: 20px; font-weight: 900; border-radius: 50px; 
-            border: none; cursor: pointer; box-shadow: 0 0 20px rgba(255,204,0,0.4);
+            background: var(--gold); color: #000; padding: 14px 50px; 
+            font-size: 18px; font-weight: 900; border-radius: 40px; border: none; cursor: pointer;
         }
 
-        #stat-bar { height: 40px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 13px; font-weight: bold; }
-        #ad-box { height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        #stat-bar { height: 40px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 12px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -71,20 +59,12 @@
     <div id="game-area">
         <div id="canvas-box">
             <canvas id="cvs"></canvas>
-            
             <div id="ovl">
                 <div id="title">NEON RUNNER</div>
-                
-                <div class="rank-list">
-                    <div class="rank-row"><span>1ST</span><span id="r1">0</span></div>
-                    <div class="rank-row"><span>2ND</span><span id="r2">0</span></div>
-                    <div class="rank-row"><span>3RD</span><span id="r3">0</span></div>
-                </div>
-
                 <div class="controls">
-                    <div class="label-row"><span>SPEED (1-18)</span><span id="s-val" class="badge">12</span></div>
+                    <div class="label-row"><span>BASE SPEED</span><span id="s-val" class="badge">12</span></div>
                     <input type="range" id="s-input" min="1" max="18" value="12">
-                    <div class="label-row"><span>DIFFICULTY</span><span id="d-val" class="badge">2</span></div>
+                    <div class="label-row"><span>DIFFICULTY (1-5)</span><span id="d-val" class="badge">2</span></div>
                     <div class="diff-grid">
                         <button class="diff-btn" data-v="1">1</button>
                         <button class="diff-btn active" data-v="2">2</button>
@@ -93,7 +73,6 @@
                         <button class="diff-btn" data-v="5">5</button>
                     </div>
                 </div>
-                
                 <button class="btn-start" id="start-btn">GAME START</button>
             </div>
         </div>
@@ -104,11 +83,6 @@
         <div id="top-score" style="color:var(--gold);">TOP: 0</div>
     </div>
 
-    <div id="ad-box">
-        <ins class="adsbygoogle" style="display:block; width:320px; height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9285335402"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-
     <script>
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
@@ -116,24 +90,11 @@
 
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
         const sInput = document.getElementById('s-input'), sVal = document.getElementById('s-val');
-        const dBtn = document.querySelectorAll('.diff-btn'), dVal = document.getElementById('d-val');
+        const dBtn = document.querySelectorAll('.diff-btn');
 
         let isLive = false, score = 0, curLv = 2;
-        let p = { x: 100, x_base: 100, y: 350, dx: 0, dy: 0, jc: 0, hp: 3, inv: 0 };
-        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.2 }; // 중력 살짝 강화
-
-        const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_final_v5') || "[0,0,0]");
-            rs.forEach((v, i) => { if(document.getElementById('r'+(i+1))) document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
-            document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
-        };
-        const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_final_v5') || "[0,0,0]");
-            rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_final_v5', JSON.stringify(rs.slice(0,3)));
-            syncRanks();
-        };
-        syncRanks();
+        let p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
+        let obs = [], cfg = { spd: 12, timer: 0, grav: 3.5, freqMin: 300, freqMax: 600 };
 
         sInput.oninput = () => { sVal.innerText = sInput.value; };
         dBtn.forEach(b => {
@@ -142,71 +103,73 @@
                 dBtn.forEach(x => x.classList.remove('active'));
                 b.classList.add('active');
                 curLv = parseInt(b.dataset.v);
-                dVal.innerText = curLv;
+                document.getElementById('d-val').innerText = curLv;
             };
         });
 
         startBtn.onclick = function(e) {
             e.stopPropagation();
-            cfg.spd = parseInt(sInput.value);
-            const gMap = { 1:2.8, 2:3.2, 3:3.6, 4:4.0, 5:4.5 };
-            cfg.grav = gMap[curLv];
-            p = { x: 100, x_base: 100, y: 350, dx: 0, dy: 0, jc: 0, hp: 3, inv: 0 };
-            obs = []; score = 0; isLive = true; cfg.timer = 0; // 시작하자마자 나오도록
+            // [난이도 로직] 난이도에 따른 속도 가중치와 장애물 빈도(타이머) 설정
+            const baseSpd = parseInt(sInput.value);
+            const lvMap = {
+                1: { grav: 3.0, spdMul: 0.7, fMin: 500, fMax: 800 },
+                2: { grav: 3.5, spdMul: 1.0, fMin: 300, fMax: 600 },
+                3: { grav: 3.8, spdMul: 1.2, fMin: 200, fMax: 450 },
+                4: { grav: 4.2, spdMul: 1.4, fMin: 150, fMax: 300 },
+                5: { grav: 4.6, spdMul: 1.7, fMin: 80,  fMax: 180 } // 지옥 난이도
+            };
+            
+            const settings = lvMap[curLv];
+            cfg.spd = baseSpd * settings.spdMul;
+            cfg.grav = settings.grav;
+            cfg.freqMin = settings.fMin;
+            cfg.freqMax = settings.fMax;
+            
+            p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
+            obs = []; score = 0; isLive = true; cfg.timer = 0;
             ovl.style.display = 'none';
         };
 
-        // [수정] 점프: 2단 점프 시 위로 솟구치는 힘(dy) 대폭 강화
         const handleJump = (e) => {
-            if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
-            
+            if(!isLive || e.target.closest('.controls')) return;
             if(p.jc < 2) {
-                // 1단: 높게(-33), 2단: 더 높게(-30) + 앞으로 돌진(dx)
-                p.dy = (p.jc === 0) ? -33 : -30; 
-                p.dx = (p.jc === 0) ? 9 : 14; 
+                // 수직 점프 (오른쪽 추진력 dx 제거)
+                p.dy = (p.jc === 0) ? -36 : -33; 
                 p.jc++;
             }
         };
 
         window.addEventListener('mousedown', handleJump);
         window.addEventListener('touchstart', (e) => {
-            if(isLive && !e.target.closest('#ovl')) e.preventDefault();
+            if(isLive) e.preventDefault();
             handleJump(e);
         }, { passive: false });
 
         function loop() {
             if(isLive) {
-                let s = cfg.spd + (score/2500); // 속도 증가폭 상향
+                // 시간에 따른 속도 증가도 난이도 영향 받음
+                let s = cfg.spd + (score / (2000 / curLv)); 
                 p.dy += cfg.grav;
                 p.y += p.dy;
-                p.x += p.dx;
 
-                if(p.y >= 350) { 
-                    p.y = 350; p.dy = 0; p.jc = 0; p.dx = 0;
-                    // 바닥 복귀 속도 상향
-                    if(p.x > p.x_base) p.x -= 3; 
-                    if(p.x < p.x_base) p.x = p.x_base;
-                } else {
-                    p.dx *= 0.98;
-                }
-
+                if(p.y >= 350) { p.y = 350; p.dy = 0; p.jc = 0; }
                 if(p.inv > 0) p.inv--;
-                score += s/8; // 점수 획득량 상향
+                score += s/6; 
                 cfg.timer -= s;
 
-                // [수정] 장애물 출현 빈도 대폭 상향
+                // [난이도별 장애물 생성]
                 if(cfg.timer <= 0) {
-                    let h = Math.random() > 0.5 ? 25 : 55;
-                    obs.push({ x: 950, y: 400-h, w: 25, h: h, s: s });
-                    // 타이머 간격을 줄여 장애물이 더 자주 나오게 함
-                    cfg.timer = (250 + Math.random() * 350) * (15/s);
+                    let h = Math.random() > 0.5 ? 30 : 75; 
+                    obs.push({ x: 950, y: 400-h, w: 35, h: h, s: s });
+                    // 난이도가 높을수록 cfg.freqMin/Max가 작아져서 더 자주 나옴
+                    cfg.timer = (cfg.freqMin + Math.random() * (cfg.freqMax - cfg.freqMin)) * (15/s);
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
-                    if(p.inv <= 0 && p.x+10 < o.x+o.w && p.x+30 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
+                    if(p.inv <= 0 && p.x+15 < o.x+o.w && p.x+25 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
                         p.hp--; p.inv = 60;
-                        if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
+                        if(p.hp <= 0) { isLive = false; ovl.style.display = 'flex'; }
                     }
                     if(o.x < -100) obs.splice(i, 1);
                 });
