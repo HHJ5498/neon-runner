@@ -3,28 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: SMART AI EDITION</title>
+    <title>NEON DASH: CUSTOM AI EDITION</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --neon-blue: #00f2ff; --neon-pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: -apple-system, sans-serif; }
+        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; }
         
         #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #050508; overflow: hidden; }
         canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; z-index: 1; touch-action: none; }
         
         .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        #title { color: #fff; font-size: 32px; font-weight: 900; text-shadow: 0 0 15px #00f2ff; margin-bottom: 20px; }
+        #title { color: #fff; font-size: 28px; font-weight: 900; text-shadow: 0 0 15px #00f2ff; margin-bottom: 20px; }
         
-        .settings-box { background: #111; padding: 20px; border-radius: 20px; border: 1px solid #00f2ff; margin-bottom: 25px; width: 280px; text-align: center; }
-        #speed-slider { width: 100%; cursor: pointer; accent-color: #00f2ff; margin: 10px 0; }
-        #speed-display { color: #00f2ff; font-size: 28px; font-weight: 900; }
-        .btn-start { background: #00f2ff; color: #000; padding: 15px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px #00f2ff; }
+        .settings-box { background: #111; padding: 15px; border-radius: 20px; border: 1px solid #00f2ff; margin-bottom: 20px; width: 300px; text-align: center; }
+        .setting-item { margin-bottom: 15px; }
+        .setting-item label { color: #888; font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; }
+        
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #00f2ff; }
+        .val-display { color: #00f2ff; font-size: 20px; font-weight: 900; }
 
-        #stat-bar { width: 100%; height: 55px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
-        .val { color: white; font-size: 16px; font-weight: 900; }
+        .btn-start { background: #00f2ff; color: #000; padding: 15px 60px; font-size: 20px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 20px #00f2ff; }
+
+        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
+        .val { color: white; font-size: 14px; font-weight: 900; }
         .fever-bar { width: 80px; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
         #fever-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #ff0077); }
         
@@ -36,17 +40,25 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div id="title">NEON DASH AI</div>
+            <div id="title">NEON DASH CUSTOM</div>
             <div class="settings-box">
-                <input type="range" id="speed-slider" min="1" max="16" value="10">
-                <div id="speed-display">10</div>
+                <div class="setting-item">
+                    <label>GAME SPEED</label>
+                    <input type="range" id="speed-slider" min="1" max="16" value="10">
+                    <div id="speed-display" class="val-display">10</div>
+                </div>
+                <div class="setting-item">
+                    <label>OBSTACLE SIZE (SLIMNESS)</label>
+                    <input type="range" id="size-slider" min="5" max="40" value="15">
+                    <div id="size-display" class="val-display">15px</div>
+                </div>
             </div>
             <button class="btn-start" id="start-btn">RUN ENGINE</button>
         </div>
     </div>
 
     <div id="stat-bar">
-        <div id="score" class="val">0</div>
+        <div id="score" class="val">SCORE: 0</div>
         <div class="fever-bar"><div id="fever-fill"></div></div>
         <div id="gauge-text" class="val" style="color:#ffcc00;">0%</div>
     </div>
@@ -56,9 +68,7 @@
              style="display:inline-block;width:320px;height:50px"
              data-ad-client="ca-pub-7503206245117361"
              data-ad-slot="9998817128"></ins>
-        <script>
-            try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) { console.log("Ad Blocked"); }
-        </script>
+        <script>try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}</script>
     </div>
 
     <script>
@@ -67,29 +77,42 @@
     cvs.width = 900; cvs.height = 450;
 
     const C = { BLUE: '#00f2ff', PINK: '#ff0077', GOLD: '#ffcc00', BG: '#050508' };
-    const slider = document.getElementById('speed-slider');
-    const display = document.getElementById('speed-display');
+    
+    // 조절 슬라이더 요소들
+    const speedSlider = document.getElementById('speed-slider');
+    const speedDisplay = document.getElementById('speed-display');
+    const sizeSlider = document.getElementById('size-slider');
+    const sizeDisplay = document.getElementById('size-display');
     const ovl = document.getElementById('ovl');
     
-    let config = { baseSpeed: 10, j1: -21, j2: -18, g: 1.2, spawnTimer: 0 };
+    let config = { 
+        baseSpeed: 10, 
+        obsSize: 15, // 초기 장애물 크기
+        j1: -21, j2: -18, g: 1.2, spawnTimer: 0 
+    };
     
-    slider.oninput = (e) => {
+    // 설정 실시간 반영
+    speedSlider.oninput = (e) => {
         config.baseSpeed = parseInt(e.target.value);
-        display.innerText = e.target.value;
+        speedDisplay.innerText = e.target.value;
+    };
+    sizeSlider.oninput = (e) => {
+        config.obsSize = parseInt(e.target.value);
+        sizeDisplay.innerText = e.target.value + "px";
     };
 
     const game = {
         isLive: false, score: 0, gauge: 0, fever: false,
-        patterns: [{y:365}, {y:365, next:220}, {y:220}, {y:365, next:365}], // Y값 하향 조정 (바닥 밀착)
+        patterns: [{y:395}, {y:395, next:250}, {y:250}, {y:395, next:395}], 
         start() {
-            this.isLive = true; this.score = 0; this.gauge = 0;
+            this.isLive = true; this.score = 0; this.gauge = 0; this.fever = false;
             p.y = 350; p.dy = 0; p.jCount = 0;
             obs = []; coins = [];
             ovl.style.display = 'none';
         },
         over() {
             this.isLive = false;
-            document.getElementById('title').innerText = "REBOOT SYSTEM";
+            document.getElementById('title').innerText = "REBOOT REQUIRED";
             ovl.style.display = 'flex';
         }
     };
@@ -105,17 +128,19 @@
 
     function spawnAI(speed) {
         const pattern = game.patterns[Math.floor(Math.random() * game.patterns.length)];
-        // 장애물 크기를 작게 정의 (w: 25, h: 30)
-        obs.push({ x: 950, y: pattern.y, s: speed, w: 25, h: 30 });
+        // 유저가 설정한 config.obsSize를 사용하여 장애물 생성
+        obs.push({ x: 950, y: pattern.y - config.obsSize, s: speed, w: config.obsSize, h: config.obsSize });
         if(pattern.next) {
             setTimeout(() => {
-                if(game.isLive) obs.push({ x: 950, y: pattern.next, s: speed, w: 25, h: 30 });
+                if(game.isLive) obs.push({ x: 950, y: pattern.next - config.obsSize, s: speed, w: config.obsSize, h: config.obsSize });
             }, 4500 / speed); 
         }
     }
 
     function action(e) {
-        if (!game.isLive || e.target.id === 'speed-slider') return;
+        if (!game.isLive) return;
+        if (e.target.closest('.settings-box')) return;
+        
         if (p.jCount < 2) {
             p.dy = (p.jCount === 0) ? config.j1 : config.j2;
             p.jCount++;
@@ -130,7 +155,7 @@
     function update() {
         if(!game.isLive) return;
         
-        let curS = (config.baseSpeed + (game.score/1500)) * (game.fever ? 1.4 : 1);
+        let curS = (config.baseSpeed + (game.score/2000)) * (game.fever ? 1.4 : 1);
         syncAI(curS);
         
         game.score += curS / 15;
@@ -147,11 +172,10 @@
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            // 💡 정교해진 히트박스 판정 (장애물이 작아졌으므로 판정 범위도 축소)
-            // 유저: x+20(중심), y+22(중심) / 장애물: o.x+12.5(중심), o.y+15(중심)
+            // 유동적 히트박스 판정
             if(!game.fever && 
-               Math.abs((p.x + 20) - (o.x + 12.5)) < 22 && 
-               Math.abs((p.y + 22) - (o.y + 15)) < 28) {
+               Math.abs((p.x + 20) - (o.x + o.w/2)) < (20 + o.w/2 - 5) && 
+               Math.abs((p.y + 22) - (o.y + o.h/2)) < (22 + o.h/2 - 5)) {
                 game.over();
             }
             if(o.x < -100) obs.splice(i, 1);
@@ -170,7 +194,7 @@
 
         if(game.fever) { game.gauge -= 0.5; if(game.gauge <= 0) game.fever = false; }
 
-        document.getElementById('score').innerText = Math.floor(game.score);
+        document.getElementById('score').innerText = "SCORE: " + Math.floor(game.score);
         document.getElementById('gauge-text').innerText = Math.floor(game.gauge) + "%";
         document.getElementById('fever-fill').style.width = game.gauge + "%";
     }
@@ -180,11 +204,9 @@
         ctx.strokeStyle = game.fever ? C.PINK : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
         
-        // 🟦 플레이어 (40x45)
         ctx.fillStyle = game.fever ? '#fff' : (p.jCount === 2 ? C.GOLD : C.BLUE);
         ctx.fillRect(p.x, p.y, 40, 45);
 
-        // 🟥 장애물 (25x30) - 더 작고 날렵하게 수정
         ctx.fillStyle = C.PINK;
         obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
         
