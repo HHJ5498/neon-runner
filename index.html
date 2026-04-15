@@ -4,36 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Runner : 동체시력키우기</title>
-    
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
-
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; -webkit-touch-callout: none; }
         
-        html, body { height: 100%; width: 100%; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
+        html, body { height: 100%; width: 100%; background: #000; font-family: sans-serif; color: white; overflow: hidden; }
         body { display: flex; flex-direction: column; }
 
-        #game-area { flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-start; background: var(--bg); padding: 10px; overflow: hidden; }
-        #canvas-box { position: relative; width: 100%; max-width: 600px; max-height: 45vh; aspect-ratio: 2 / 1; margin-top: 20px; }
+        /* [핵심 수정] 게임 영역에 스크롤 허용 */
+        #game-area { 
+            flex: 1; 
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            background: var(--bg); 
+            padding: 10px; 
+            overflow-y: auto; /* 내용이 길면 스크롤 가능 */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #canvas-box { 
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; 
+            aspect-ratio: 2 / 1; 
+            margin-top: 5px; /* 여백 최소화 */
+            margin-bottom: 20px; /* 스크롤 여유 공간 */
+        }
+
         canvas { width: 100%; height: 100%; background: #000; border: 2px solid #333; display: block; border-radius: 12px; }
 
-        /* 오버레이 및 랭킹 스타일 */
-        #ovl { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 20px; border-radius: 12px; }
-        #title { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 5px; text-shadow: 0 0 15px var(--gold); text-align: center; }
-        #sub-title { font-size: 12px; color: var(--neon); margin-bottom: 15px; font-weight: bold; }
+        #ovl { 
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.92); 
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; z-index: 1000; padding: 15px; border-radius: 12px; 
+        }
 
-        #ranking-box { width: 100%; max-width: 240px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 10px; margin-bottom: 20px; border: 1px solid #333; }
-        .rank-title { font-size: 14px; color: var(--gold); text-align: center; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 5px; font-weight: bold; }
-        .rank-item { display: flex; justify-content: space-between; font-size: 13px; margin: 4px 0; font-family: monospace; }
+        #title { font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 5px; text-shadow: 0 0 15px var(--gold); text-align: center; }
+        #sub-title { font-size: 11px; color: var(--neon); margin-bottom: 10px; font-weight: bold; }
+
+        #ranking-box { width: 100%; max-width: 220px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 8px; margin-bottom: 15px; border: 1px solid #333; }
+        .rank-title { font-size: 13px; color: var(--gold); text-align: center; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 3px; font-weight: bold; }
+        .rank-item { display: flex; justify-content: space-between; font-size: 12px; margin: 3px 0; font-family: monospace; }
         .rank-num { color: var(--neon); }
-        .rank-score { color: #fff; }
 
-        .btn-start { background: var(--gold); color: #000; padding: 15px 60px; font-size: 20px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; box-shadow: 0 5px 20px rgba(255, 204, 0, 0.4); }
+        .btn-start { 
+            background: var(--gold); color: #000; padding: 12px 50px; 
+            font-size: 18px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; 
+            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.4); 
+            flex-shrink: 0; /* 버튼 형태 유지 */
+        }
 
-        #stat-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; font-size: 14px; font-weight: bold; border-top: 1px solid #222; }
-        #ad-box { height: 75px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
-        .ai-stat { font-size: 11px; color: #666; font-family: monospace; }
+        #stat-bar { height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 13px; font-weight: bold; border-top: 1px solid #222; }
+        #ad-box { height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        .ai-stat { font-size: 10px; color: #666; font-family: monospace; }
     </style>
 </head>
 <body oncontextmenu="return false;" ondragstart="return false;">
@@ -44,13 +70,10 @@
             <div id="ovl">
                 <div id="title">Neon Runner : 동체시력키우기</div>
                 <div id="sub-title">AI ADAPTIVE PHYSICS ENGINE</div>
-                
                 <div id="ranking-box">
                     <div class="rank-title">TOP 5 RANKING</div>
-                    <div id="rank-list">
-                        </div>
+                    <div id="rank-list"></div>
                 </div>
-
                 <button class="btn-start" id="start-btn">START TRAIN</button>
             </div>
         </div>
@@ -58,7 +81,7 @@
 
     <div id="stat-bar">
         <div id="now-score">SCORE: 0</div>
-        <div class="ai-stat" id="ai-log">GRAVITY: 3.2 | SPEED: 10.0</div>
+        <div class="ai-stat" id="ai-log">GRAV: 3.2 | SPD: 10.0</div>
         <div id="top-score" style="color:var(--gold);">TOP: 0</div>
     </div>
 
@@ -71,18 +94,15 @@
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
         cvs.width = 900; cvs.height = 450;
-        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn'), aiLog = document.getElementById('ai-log');
-        const rankList = document.getElementById('rank-list');
+        const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn'), aiLog = document.getElementById('ai-log'), rankList = document.getElementById('rank-list');
 
         let isLive = false, score = 0;
         let p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
         let obs = [], cfg = { spd: 10, nextDist: 0, grav: 3.2, gap: 650, jumpForce: -20, holdForce: -3.8 }; 
 
-        // 랭킹 불러오기 및 표시 함수
         const updateRankingUI = () => {
             let ranks = JSON.parse(localStorage.getItem('neon_runner_ranks') || "[]");
             rankList.innerHTML = "";
-            // 5위까지만 표시
             for(let i=0; i<5; i++) {
                 let s = ranks[i] ? Math.floor(ranks[i]) : 0;
                 rankList.innerHTML += `<div class="rank-item"><span class="rank-num">${i+1}ST</span><span class="rank-score">${s}</span></div>`;
@@ -90,17 +110,15 @@
             document.getElementById('top-score').innerText = "TOP: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
         };
 
-        // 점수 저장 함수
         const saveScore = (newScore) => {
             let ranks = JSON.parse(localStorage.getItem('neon_runner_ranks') || "[]");
-            ranks.push(newScore);
-            ranks.sort((a, b) => b - a); // 내림차순 정렬
-            ranks = ranks.slice(0, 5); // TOP 5만 남김
+            ranks.push(newScore); ranks.sort((a, b) => b - a);
+            ranks = ranks.slice(0, 5);
             localStorage.setItem('neon_runner_ranks', JSON.stringify(ranks));
             updateRankingUI();
         };
 
-        updateRankingUI(); // 초기 실행 시 랭킹 표시
+        updateRankingUI();
 
         startBtn.onclick = function(e) {
             e.stopPropagation();
@@ -108,12 +126,13 @@
             p = { x: 100, y: 350, dy: 0, jc: 0, hp: 3, inv: 0, isJumping: false, jumpTime: 0 };
             obs = []; score = 0; isLive = true;
             ovl.style.display = 'none';
+            // 시작 시 화면 최상단으로 스크롤 고정 (게임 집중)
+            document.getElementById('game-area').scrollTop = 0;
         };
 
         const startJump = (e) => {
             if(!isLive || e.target === startBtn) return;
-            if (e.pointerType === 'mouse' && e.button !== 0) return;
-            if (e.pointerType === 'touch') e.preventDefault();
+            // 게임 중 스크롤 방지는 필요 없으나 조작 시 기본동작 방지
             if(p.jc < 2) {
                 p.dy = (p.jc === 0) ? cfg.jumpForce : cfg.jumpForce * 0.9;
                 p.jc++; p.isJumping = true; p.jumpTime = 0;
@@ -121,63 +140,45 @@
         };
         const endJump = () => p.isJumping = false;
 
-        window.addEventListener('pointerdown', startJump, { passive: false });
+        window.addEventListener('pointerdown', startJump);
         window.addEventListener('pointerup', endJump);
 
         function loop() {
             if(isLive) {
-                cfg.spd += 0.0018; 
-                cfg.grav = 3.2 + (score / 1500);
+                cfg.spd += 0.0018; cfg.grav = 3.2 + (score / 1500);
                 cfg.jumpForce = -20 - (cfg.grav - 3.2) * 1.5;
                 cfg.holdForce = -3.8 - (cfg.grav - 3.2) * 0.4;
                 cfg.gap = Math.max(270, 680 - (cfg.spd - 10) * 28);
-                
                 aiLog.innerText = `GRAV: ${cfg.grav.toFixed(2)} | SPD: ${cfg.spd.toFixed(1)}`;
 
-                if (p.isJumping && p.jumpTime < 18) {
-                    p.dy += cfg.holdForce; p.jumpTime++;
-                } else { p.isJumping = false; }
-
+                if (p.isJumping && p.jumpTime < 18) { p.dy += cfg.holdForce; p.jumpTime++; } else { p.isJumping = false; }
                 p.dy += cfg.grav; p.y += p.dy;
                 if(p.y >= 350) { p.y = 350; p.dy = 0; p.jc = 0; p.isJumping = false; }
-                
                 if(p.inv > 0) p.inv--;
                 score += cfg.spd / 12;
                 cfg.nextDist -= cfg.spd;
-
                 if(cfg.nextDist <= 0) {
                     let h = Math.random() > 0.65 ? 35 : 75; 
                     obs.push({ x: 950, y: 400-h, w: 32, h: h });
                     cfg.nextDist = cfg.gap; 
                 }
-
                 obs.forEach((o, i) => {
                     o.x -= cfg.spd;
                     if(p.inv <= 0 && p.x+15 < o.x+o.w && p.x+25 > o.x && p.y+10 < o.y+o.h && p.y+40 > o.y) {
                         p.hp--; p.inv = 60;
-                        if(p.hp <= 0) { 
-                            isLive = false; 
-                            saveScore(score); // 게임 오버 시 점수 저장
-                            ovl.style.display = 'flex'; 
-                        }
+                        if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
                     }
                     if(o.x < -100) obs.splice(i, 1);
                 });
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
-
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
             ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 400, 900, 1);
-            
             ctx.fillStyle = "#ffcc00";
             for(let i=0; i<p.hp; i++) ctx.fillRect(40+(i*25), 40, 15, 15);
-            
             ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0,242,255,0.2)");
             ctx.fillRect(p.x, p.y, 40, 50);
-            
-            ctx.fillStyle = "#ff0077"; 
-            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-            
+            ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
             requestAnimationFrame(loop);
         }
         loop();
