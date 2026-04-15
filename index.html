@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: INTELLIGENT</title>
+    <title>NEON DASH: COOKIE EDITION</title>
     
     <style>
-        :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; --heart: #ff3366; }
+        :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
         
         body { 
@@ -15,7 +15,7 @@
             font-family: 'Apple SD Gothic Neo', sans-serif; color: white;
         }
         
-        #game-view { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; background: #050508; }
+        #game-view { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; background: var(--bg); }
         canvas { width: 100%; height: 100%; object-fit: contain; }
         
         .overlay { 
@@ -24,18 +24,18 @@
             z-index: 1000; padding: 20px;
         }
         
-        #title { font-size: 32px; font-weight: 900; color: var(--neon); text-shadow: 0 0 15px var(--neon); margin-bottom: 20px; }
+        #title { font-size: 32px; font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 20px; }
         
         .settings-box { background: #111; padding: 20px; border-radius: 15px; border: 1px solid #333; width: 100%; max-width: 320px; margin-bottom: 20px; }
         .setting-item { margin-bottom: 15px; text-align: left; }
-        .setting-item label { font-size: 12px; color: #888; display: block; margin-bottom: 8px; }
-        input[type="range"] { width: 100%; height: 30px; accent-color: var(--neon); cursor: pointer; }
-        .val-display { color: var(--neon); font-size: 14px; font-weight: bold; text-align: right; margin-top: 5px; }
+        .setting-item label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+        input[type="range"] { width: 100%; height: 30px; accent-color: var(--gold); cursor: pointer; }
+        .val-display { color: var(--gold); font-size: 14px; font-weight: bold; text-align: right; margin-top: 5px; }
 
         .btn-start { 
-            background: var(--neon); color: #000; padding: 18px 60px; 
+            background: var(--gold); color: #000; padding: 18px 60px; 
             font-size: 20px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
         }
 
         #stat-bar { 
@@ -49,21 +49,21 @@
     <div id="game-view">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div id="title">NEON DASH AI</div>
+            <div id="title">GOLDEN DASH</div>
             <div class="settings-box">
                 <div class="setting-item">
                     <label>엔진 속도 (1 ~ 24)</label>
-                    <input type="range" id="speed-slider" min="1" max="24" value="10">
-                    <div id="speed-val" class="val-display">현재 속도: 10</div>
+                    <input type="range" id="speed-slider" min="1" max="24" value="12">
+                    <div id="speed-val" class="val-display">현재 속도: 12</div>
                 </div>
                 <div class="setting-item">
-                    <label>장애물 규격 (5 ~ 40)</label>
-                    <input type="range" id="size-slider" min="5" max="40" value="18">
-                    <div id="size-val" class="val-display">현재 크기: 18px</div>
+                    <label>장애물 크기 (15 ~ 40)</label>
+                    <input type="range" id="size-slider" min="15" max="40" value="20">
+                    <div id="size-val" class="val-display">현재 크기: 20px</div>
                 </div>
             </div>
             <button class="btn-start" id="start-btn">게임 시작</button>
-            <p id="rank-display" style="margin-top:20px; font-size:14px; color:#666;"></p>
+            <p id="rank-display" style="margin-top:20px; font-size:13px; color:#666;"></p>
         </div>
     </div>
 
@@ -83,11 +83,12 @@
 
     let isLive = false, score = 0, gauge = 0, isFever = false;
     let player = { x: 120, y: 350, dy: 0, g: 1.2, jCount: 0, hp: 3, invul: 0 };
-    let obs = [], items = [], config = { speed: 10, size: 18, timer: 0 };
+    let obs = [], items = [], config = { speed: 12, size: 20, timer: 0 };
 
     sSpeed.oninput = () => { vSpeed.innerText = "현재 속도: " + sSpeed.value; };
     sSize.oninput = () => { vSize.innerText = "현재 크기: " + sSize.value + "px"; };
 
+    // 하트 그리기 (색상을 노란색 --gold로 고정)
     function drawHeart(x, y, size, color, empty = false) {
         ctx.save(); ctx.translate(x, y); ctx.beginPath(); ctx.moveTo(0, 0);
         ctx.bezierCurveTo(-size/2, -size/2, -size, size/4, 0, size);
@@ -116,8 +117,9 @@
     const handleAction = (e) => {
         if(!isLive || e.target.closest('.settings-box')) return;
         if(player.jCount < 2) {
-            const jumpForce = -(16.5 + ((config.speed + score/2000) * 0.7));
-            player.dy = (player.jCount === 0) ? jumpForce : jumpForce * 0.85;
+            const currentS = (config.speed + (score/2000));
+            const jumpForce = -(17 + (currentS * 0.65));
+            player.dy = (player.jCount === 0) ? jumpForce : jumpForce * 0.82;
             player.jCount++;
         }
     };
@@ -126,70 +128,79 @@
     window.addEventListener('touchstart', (e) => { handleAction(e); if(isLive && e.cancelable) e.preventDefault(); }, { passive: false });
     startBtn.onclick = (e) => { e.stopPropagation(); startGame(); };
 
+    function createPattern(type, s) {
+        const size = config.size;
+        const startX = 950;
+        
+        if(type === 1) { // 1단 점프 블록 3개 연속
+            for(let i=0; i<3; i++) {
+                obs.push({ x: startX + (i*180), y: 395-size, w: size, h: size, s: s });
+            }
+        } else if(type === 2) { // 2단 점프 필수 (긴 블록)
+            obs.push({ x: startX, y: 395-size, w: size*3.5, h: size, s: s });
+        } else { // 쿠키런 식 '위-아래' 혼합 (높은 장애물 포함)
+            obs.push({ x: startX, y: 395-size*2.2, w: size, h: size*2.2, s: s }); // 높은 벽
+        }
+
+        // 지능적 아이템 배치 (궤적에 따라)
+        for(let i=0; i<5; i++) {
+            items.push({ 
+                x: startX + (i * 60), 
+                y: 260 - (Math.sin(i * 0.8) * 70), 
+                type: (Math.random() < 0.05) ? 'heart' : 'coin' 
+            });
+        }
+    }
+
     function update() {
         if(!isLive) return;
-        let s = (config.speed + (score/2000)) * (isFever ? 1.5 : 1);
-        player.g = 0.85 + (s * 0.04);
-        score += s/10;
+        let s = (config.speed + (score/2500)) * (isFever ? 1.4 : 1);
+        player.g = 0.88 + (s * 0.04);
+        score += s/8;
         player.dy += player.g; player.y += player.dy;
         if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
         if(player.invul > 0) player.invul--;
 
         config.timer -= s;
         if(config.timer <= 0) {
-            // 장애물 타입 결정: 1단(단일), 2단(연속 블록)
-            let type = Math.random() > 0.4 ? 'single' : 'double';
-            let ow = config.size;
-            let count = (type === 'double') ? 2 : 1;
-            let gap = config.size * 0.3; // 블록 사이 미세한 틈
-            
-            obs.push({ x: 950, y: 395 - config.size, w: (ow * count) + (gap * (count-1)), s: s, type: type });
-            
-            // 지능적 아이템 배치: 장애물을 넘는 점프 궤적에 코인 생성
-            for(let i=0; i<3; i++) {
-                items.push({ 
-                    x: 1000 + (i * 40), 
-                    y: 280 - (Math.sin(i) * 60), 
-                    type: (Math.random() < 0.05 && player.hp < 3) ? 'heart' : 'coin' 
-                });
-            }
-            config.timer = (300 + Math.random() * 200) * (10/s + 0.5);
+            const patternType = Math.floor(Math.random() * 3);
+            createPattern(patternType, s);
+            config.timer = (400 + Math.random() * 300) * (12/s);
         }
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            // 충돌 판정 (미세 보정 적용)
             if(!isFever && player.invul <= 0) {
-                if(player.x + 5 < o.x + o.w && player.x + 35 > o.x && player.y + 40 > o.y) {
+                if(player.x + 8 < o.x + o.w && player.x + 32 > o.x && player.y + 40 > o.y) {
                     player.hp--; player.invul = 60;
                     if(player.hp <= 0) gameOver();
                 }
             }
-            if(o.x < -200) obs.splice(i, 1);
+            if(o.x < -400) obs.splice(i, 1);
         });
 
         items.forEach((it, i) => {
             it.x -= s;
             if(Math.abs(player.x - it.x) < 45 && Math.abs(player.y - it.y) < 60) {
-                if(it.type === 'coin') { gauge += 10; if(gauge >= 100) isFever = true; }
+                if(it.type === 'coin') { gauge += 8; if(gauge >= 100) isFever = true; }
                 else { if(player.hp < 3) player.hp++; }
                 items.splice(i, 1);
             }
             if(it.x < -100) items.splice(i, 1);
         });
 
-        if(isFever) { gauge -= 0.5; if(gauge <= 0) isFever = false; }
+        if(isFever) { gauge -= 0.4; if(gauge <= 0) isFever = false; }
         document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
         document.getElementById('best-txt').innerText = "BEST: " + (localStorage.getItem('neon_best') || 0);
     }
 
     function draw() {
         ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
-        ctx.strokeStyle = isFever ? "#ff0077" : "#333";
+        ctx.strokeStyle = isFever ? var(--gold) : "#333";
         ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
 
-        // HP UI
-        for(let i=0; i<3; i++) drawHeart(50 + (i*40), 50, 16, "#ff3366", i >= player.hp);
+        // 노란색 상단 UI 하트
+        for(let i=0; i<3; i++) drawHeart(55 + (i*42), 55, 17, "#ffcc00", i >= player.hp);
 
         // Player
         if(player.invul % 10 < 5) {
@@ -197,27 +208,18 @@
             ctx.fillRect(player.x, player.y, 40, 45);
         }
 
-        // Obstacles (바닥 장애물)
-        obs.forEach(o => {
-            ctx.shadowBlur = 10; ctx.shadowColor = "#ff0077";
-            ctx.fillStyle = "#ff0077";
-            // 2단 점프용은 블록 두 개가 붙은 것처럼 그림
-            if(o.type === 'double') {
-                let bw = (o.w - (config.size * 0.3)) / 2;
-                ctx.fillRect(o.x, o.y, bw, config.size);
-                ctx.fillRect(o.x + bw + (config.size * 0.3), o.y, bw, config.size);
-            } else {
-                ctx.fillRect(o.x, o.y, o.w, config.size);
-            }
-        });
+        // Obstacles (지능형 패턴)
+        ctx.shadowBlur = 12; ctx.shadowColor = "#ff0077";
+        ctx.fillStyle = "#ff0077";
+        obs.forEach(o => { ctx.fillRect(o.x, o.y, o.w, o.h || config.size); });
         ctx.shadowBlur = 0;
 
-        // Items
+        // 노란색 아이템들
         items.forEach(it => {
             if(it.type === 'coin') {
                 ctx.fillStyle = "#ffcc00"; ctx.beginPath(); ctx.arc(it.x, it.y, 8, 0, 7); ctx.fill();
             } else {
-                drawHeart(it.x, it.y, 14, "#ff3366");
+                drawHeart(it.x, it.y, 15, "#ffcc00"); // 맵에 나오는 하트도 노란색
             }
         });
     }
