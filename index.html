@@ -13,7 +13,6 @@
         html, body { height: 100dvh; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
         body { display: flex; flex-direction: column; }
 
-        /* [수정] 게임 영역: 상하 여백 확보로 버튼 잘림 방지 */
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
             background: var(--bg); padding: 20px 10px; overflow: hidden;
@@ -21,14 +20,12 @@
 
         #canvas-box {
             position: relative; width: 100%; max-width: 900px; 
-            max-height: 70vh; /* 화면의 70%까지만 차지하도록 제한해서 버튼 공간 확보 */
-            aspect-ratio: 2 / 1;
+            max-height: 70vh; aspect-ratio: 2 / 1;
             display: flex; justify-content: center; align-items: center;
         }
 
         canvas { width: 100%; height: 100%; background: #000; border: 2px solid #222; display: block; border-radius: 8px; }
 
-        /* 메뉴 레이어: 요소 간 간격 최적화 */
         #ovl {
             position: absolute; inset: 0; background: rgba(0, 0, 0, 0.96);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -60,13 +57,11 @@
 
         input[type="range"] { width: 100%; height: 5px; accent-color: var(--gold); margin: 8px 0 12px; cursor: pointer; }
 
-        /* [수정] 스타트 버튼 크기 및 여백 조정 */
         .btn-start { 
             background: var(--gold); color: #000; padding: 12px 60px; 
             font-size: 18px; font-weight: 900; border-radius: 50px; 
-            border: none; cursor: pointer; transition: 0.2s;
+            border: none; cursor: pointer;
         }
-        .btn-start:active { transform: scale(0.95); }
 
         #stat-bar { height: 40px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; font-weight: bold; font-size: 13px; }
         #ad-box { height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
@@ -132,7 +127,6 @@
         const dBtn = document.querySelectorAll('.diff-btn'), dVal = document.getElementById('d-val');
 
         let isLive = false, score = 0, curLv = 2;
-        // [수정] 점프 및 중력 밸런스 조정: 고점프(-28) & 강한 중력(3.2)
         let p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
         let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 3.2 };
 
@@ -142,14 +136,14 @@
         };
 
         const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal_2') || "[0,0,0,0,0]");
             rs.forEach((v, i) => { document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
             document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
         };
         const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_top5_vFinal_2') || "[0,0,0,0,0]");
             rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_top5_vFinal', JSON.stringify(rs.slice(0,5)));
+            localStorage.setItem('nr_top5_vFinal_2', JSON.stringify(rs.slice(0,5)));
             syncRanks();
         };
         syncRanks();
@@ -175,12 +169,10 @@
             ovl.style.display = 'none';
         };
 
-        // [핵심] 2단 점프 및 파워 점프 로직
         const jump = (e) => {
             if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
             if(p.jc < 2) {
-                // 첫 점프는 높게, 2단 점프는 조금 낮게 추진력 조절
-                p.dy = (p.jc === 0) ? -28 : -22; 
+                p.dy = (p.jc === 0) ? -29 : -23; 
                 p.jc++;
             }
         };
@@ -197,6 +189,24 @@
             ctx.fillStyle = empty ? "#222" : col; ctx.fill(); ctx.restore();
         }
 
+        // --- [신규] 다양한 장애물 패턴 생성 함수 ---
+        function spawnPattern(s) {
+            const r = Math.random();
+            if (r < 0.3) { // 패턴 1: 단일 장애물
+                obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
+            } else if (r < 0.5) { // 패턴 2: 연속 2개 (2단 점프 유도)
+                obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
+                obs.push({ x: 1100, y: 375, w: 22, h: 22, s: s });
+            } else if (r < 0.7) { // 패턴 3: 높은 벽 (타이밍 중요)
+                obs.push({ x: 950, y: 355, w: 22, h: 42, s: s });
+            } else if (r < 0.85) { // 패턴 4: 공중 장애물 (점프 조절 필요)
+                obs.push({ x: 950, y: 280, w: 25, h: 25, s: s });
+            } else { // 패턴 5: 넓은 함정
+                obs.push({ x: 950, y: 375, w: 60, h: 22, s: s });
+            }
+            if(Math.random() < 0.15) items.push({ x: 1150, y: 180 + Math.random()*100 });
+        }
+
         function loop() {
             if(isLive) {
                 let s = cfg.spd + (score/2500);
@@ -206,25 +216,29 @@
                 score += s/10; cfg.timer -= s;
 
                 if(cfg.timer <= 0) {
-                    obs.push({ x: 950, y: 375, w: 22, h: 22, s: s });
-                    if(Math.random() < 0.12) items.push({ x: 1050, y: 200 });
-                    cfg.timer = (400 + Math.random() * 400) * (15/s);
+                    spawnPattern(s);
+                    cfg.timer = (450 + Math.random() * 450) * (15/s);
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
-                    if(p.inv <= 0 && p.x < o.x + o.w && p.x + 35 > o.x && p.y + 45 > o.y) {
+                    // --- [수정] 피격 판정 완화 (반 블록 정도의 여백 적용) ---
+                    // 캐릭터 크기가 40x45이므로, 상하좌우에 10px 정도의 여백(히트박스 축소)을 둠
+                    let px = p.x + 8, py = p.y + 8, pw = 24, ph = 29; 
+                    if(p.inv <= 0 && px < o.x + o.w && px + pw > o.x && py < o.y + o.h && py + ph > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
                     }
-                    if(o.x < -100) obs.splice(i, 1);
+                    if(o.x < -200) obs.splice(i, 1);
                 });
+
                 items.forEach((it, i) => {
                     it.x -= s;
                     if(Math.abs(p.x - it.x) < 40 && Math.abs(p.y - it.y) < 70) {
                         if(p.hp < 3) p.hp++;
                         items.splice(i, 1);
                     }
+                    if(it.x < -100) items.splice(i, 1);
                 });
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
@@ -233,11 +247,16 @@
             ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 397, 900, 2);
             for(let i=0; i<3; i++) drawHeart(50+(i*35), 50, 15, "#ffcc00", i >= p.hp);
             
-            // 캐릭터 출력 (2단 점프 시 황금색으로 변신)
-            ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "transparent");
+            ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0, 242, 255, 0.2)");
             ctx.fillRect(p.x, p.y, 40, 45);
             
-            ctx.fillStyle = "#ff0077"; obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+            ctx.fillStyle = "#ff0077"; 
+            obs.forEach(o => {
+                ctx.fillRect(o.x, o.y, o.w, o.h);
+                // 시각적 효과: 장애물 주변에 미세한 네온 광택
+                ctx.strokeStyle = "rgba(255, 0, 119, 0.5)";
+                ctx.strokeRect(o.x-2, o.y-2, o.w+4, o.h+4);
+            });
             items.forEach(it => drawHeart(it.x, it.y, 15, "#ffcc00", false));
             requestAnimationFrame(loop);
         }
