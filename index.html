@@ -3,69 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neon Runner</title>
+    <title>Neon Runner Final</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; }
-        html, body { height: 100dvh; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; touch-action: none; }
+        html, body { height: 100%; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
         body { display: flex; flex-direction: column; }
 
+        /* 게임 영역: 버튼 잘림 방지를 위해 비율 조정 */
         #game-area {
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
-            background: var(--bg); padding: 15px 10px; overflow: hidden;
+            background: var(--bg); padding: 5px; overflow: hidden;
         }
 
         #canvas-box {
-            position: relative; width: 100%; max-width: 900px; 
-            max-height: 72vh; aspect-ratio: 2 / 1;
-            display: flex; justify-content: center; align-items: center;
+            position: relative; width: 100%; max-width: 800px; 
+            max-height: 65vh; /* 높이를 더 제한해서 아래쪽 버튼 공간 확보 */
+            aspect-ratio: 2 / 1;
         }
 
-        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #222; display: block; border-radius: 12px; }
+        canvas { width: 100%; height: 100%; background: #000; border: 2px solid #333; display: block; border-radius: 10px; }
 
+        /* [수정] 메뉴 레이어: 더 컴팩트하게 구성하여 잘림 방지 */
         #ovl {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.96);
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; padding: 15px;
+            z-index: 1000; padding: 10px;
         }
 
-        #title { font-size: clamp(22px, 5vw, 34px); font-weight: 900; color: var(--gold); text-shadow: 0 0 15px var(--gold); margin-bottom: 10px; }
+        #title { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 5px; text-shadow: 0 0 10px var(--gold); }
 
         .rank-list {
-            width: 100%; max-width: 250px; background: rgba(255,255,255,0.05);
-            border-radius: 12px; padding: 8px; margin-bottom: 12px; border: 1px solid rgba(255,204,0,0.2);
+            width: 220px; background: rgba(255,255,255,0.05);
+            border-radius: 10px; padding: 5px; margin-bottom: 8px; border: 1px solid rgba(255,204,0,0.3);
         }
-        .rank-row { display: flex; justify-content: space-between; padding: 3px 10px; font-size: 13px; color: #ccc; }
-        .rank-row.top { color: var(--gold); font-weight: bold; }
+        .rank-row { display: flex; justify-content: space-between; padding: 2px 8px; font-size: 11px; color: #bbb; }
+        .rank-row.top { color: var(--gold); font-weight: bold; font-size: 12px; }
 
         .controls {
-            width: 100%; max-width: 310px; background: rgba(255,255,255,0.03);
-            padding: 12px; border-radius: 15px; margin-bottom: 15px; pointer-events: auto;
+            width: 280px; background: rgba(255,255,255,0.03);
+            padding: 8px; border-radius: 10px; margin-bottom: 10px; pointer-events: auto;
         }
-        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
-        .badge { background: var(--gold); color: #000; padding: 2px 7px; border-radius: 5px; font-size: 10px; }
+        .label-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; margin-bottom: 2px; }
+        .badge { background: var(--gold); color: #000; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
 
-        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 5px; }
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 4px; }
         .diff-btn { 
-            background: #222; border: 1px solid #444; color: #888; padding: 8px 0;
-            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px;
+            background: #222; border: 1px solid #444; color: #888; padding: 6px 0;
+            border-radius: 5px; cursor: pointer; font-size: 12px;
         }
         .diff-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
-        /* 스피드 슬라이더 디자인 */
-        input[type="range"] { width: 100%; height: 6px; accent-color: var(--gold); margin: 10px 0 15px; cursor: pointer; }
+        input[type="range"] { width: 100%; height: 5px; accent-color: var(--gold); margin: 8px 0; cursor: pointer; }
 
         .btn-start { 
-            background: var(--gold); color: #000; padding: 13px 65px; 
-            font-size: 19px; font-weight: 900; border-radius: 50px; 
-            border: none; cursor: pointer;
+            background: var(--gold); color: #000; padding: 10px 50px; 
+            font-size: 18px; font-weight: 900; border-radius: 40px; 
+            border: none; cursor: pointer; box-shadow: 0 0 15px rgba(255,204,0,0.4);
         }
 
-        #stat-bar { height: 42px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; font-weight: bold; font-size: 13px; }
-        #ad-box { height: 62px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        #stat-bar { height: 35px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; font-size: 12px; font-weight: bold; }
+        #ad-box { height: 55px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -81,8 +82,6 @@
                     <div class="rank-row top"><span>1ST</span><span id="r1">0</span></div>
                     <div class="rank-row"><span>2ND</span><span id="r2">0</span></div>
                     <div class="rank-row"><span>3RD</span><span id="r3">0</span></div>
-                    <div class="rank-row"><span>4TH</span><span id="r4">0</span></div>
-                    <div class="rank-row"><span>5TH</span><span id="r5">0</span></div>
                 </div>
 
                 <div class="controls">
@@ -109,12 +108,7 @@
     </div>
 
     <div id="ad-box">
-        <ins class="adsbygoogle"
-             style="display:block; width:320px; height:50px"
-             data-ad-client="ca-pub-7503206245117361"
-             data-ad-slot="9285335402"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
+        <ins class="adsbygoogle" style="display:block; width:320px; height:50px" data-ad-client="ca-pub-7503206245117361" data-ad-slot="9285335402"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
@@ -131,20 +125,15 @@
         let p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
         let obs = [], items = [], cfg = { spd: 12, timer: 0, grav: 2.8 };
 
-        const lvSet = {
-            1: { sm: 0.8, g: 2.5 }, 2: { sm: 1.0, g: 2.8 }, 3: { sm: 1.2, g: 3.1 },
-            4: { sm: 1.4, g: 3.4 }, 5: { sm: 1.7, g: 3.8 }
-        };
-
         const syncRanks = () => {
-            let rs = JSON.parse(localStorage.getItem('nr_human_v2') || "[0,0,0,0,0]");
-            rs.forEach((v, i) => { document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
+            let rs = JSON.parse(localStorage.getItem('nr_final_rank') || "[0,0,0]");
+            rs.forEach((v, i) => { if(document.getElementById('r'+(i+1))) document.getElementById('r'+(i+1)).innerText = Math.floor(v); });
             document.getElementById('top-score').innerText = "TOP: " + Math.floor(rs[0]);
         };
         const saveScore = (s) => {
-            let rs = JSON.parse(localStorage.getItem('nr_human_v2') || "[0,0,0,0,0]");
+            let rs = JSON.parse(localStorage.getItem('nr_final_rank') || "[0,0,0]");
             rs.push(s); rs.sort((a,b)=>b-a);
-            localStorage.setItem('nr_human_v2', JSON.stringify(rs.slice(0,5)));
+            localStorage.setItem('nr_final_rank', JSON.stringify(rs.slice(0,3)));
             syncRanks();
         };
         syncRanks();
@@ -162,28 +151,33 @@
 
         startBtn.onclick = function(e) {
             e.stopPropagation();
-            const set = lvSet[curLv];
-            cfg.spd = parseInt(sInput.value) * set.sm;
-            cfg.grav = set.g;
+            cfg.spd = parseInt(sInput.value);
+            // 난이도별 중력 조절
+            const gMap = { 1:2.4, 2:2.8, 3:3.2, 4:3.5, 5:4.0 };
+            cfg.grav = gMap[curLv];
+            
             p = { x: 120, y: 350, dy: 0, jc: 0, hp: 3, inv: 0 };
             obs = []; items = []; score = 0; isLive = true;
             ovl.style.display = 'none';
         };
 
-        // [핵심] 2단 점프 로직 반영
-        const jump = (e) => {
-            if(!isLive || e.target.closest('.controls') || e.target === startBtn) return;
+        // --- [수정] 점프 로직: 고공 점프 및 확실한 2단 점프 ---
+        const handleJump = (e) => {
+            if(!isLive) return;
+            // 메뉴 조작 시 점프 방지
+            if(e.target.closest('.controls') || e.target === startBtn) return;
+            
             if(p.jc < 2) {
-                // 1단은 높게, 2단은 보조 추진력 느낌으로
-                p.dy = (p.jc === 0) ? -27 : -21; 
+                // 1단 점프 (-30: 매우 높음), 2단 점프 (-24: 추가 추진)
+                p.dy = (p.jc === 0) ? -30 : -24; 
                 p.jc++;
             }
         };
 
-        window.addEventListener('mousedown', jump);
+        window.addEventListener('mousedown', handleJump);
         window.addEventListener('touchstart', (e) => {
             if(isLive && !e.target.closest('#ovl')) e.preventDefault();
-            jump(e);
+            handleJump(e);
         }, { passive: false });
 
         function drawHeart(x, y, s, col, empty) {
@@ -192,69 +186,52 @@
             ctx.fillStyle = empty ? "#222" : col; ctx.fill(); ctx.restore();
         }
 
-        function spawnPattern(s) {
-            const r = Math.random();
-            const gap = 950;
-            if (r < 0.4) {
-                obs.push({ x: gap, y: 375, w: 22, h: 22, s: s });
-            } else if (r < 0.7) { // 2단 점프가 유용한 2연속 장애물
-                obs.push({ x: gap, y: 375, w: 22, h: 22, s: s });
-                obs.push({ x: gap + 160, y: 375, w: 22, h: 22, s: s });
-            } else {
-                obs.push({ x: gap, y: 355, w: 22, h: 42, s: s });
-                if(Math.random() < 0.3) items.push({ x: gap + 100, y: 180 });
-            }
-        }
-
         function loop() {
             if(isLive) {
-                let s = cfg.spd + (score/3500); 
+                let s = cfg.spd + (score/3000); 
                 p.dy += cfg.grav; p.y += p.dy;
-                if(p.y > 350) { p.y = 350; p.dy = 0; p.jc = 0; }
+                
+                // 바닥 판정 및 점프 카운트 초기화
+                if(p.y >= 350) { 
+                    p.y = 350; p.dy = 0; p.jc = 0; 
+                }
+
                 if(p.inv > 0) p.inv--;
-                score += s/10; cfg.timer -= s;
+                score += s/12; cfg.timer -= s;
 
                 if(cfg.timer <= 0) {
-                    spawnPattern(s);
-                    cfg.timer = (500 + Math.random() * 500) * (15/s);
+                    let type = Math.random();
+                    if(type < 0.5) obs.push({ x: 950, y: 375, w: 25, h: 25, s: s });
+                    else obs.push({ x: 950, y: 345, w: 25, h: 55, s: s }); // 높은 장애물
+                    cfg.timer = (500 + Math.random() * 600) * (15/s);
                 }
 
                 obs.forEach((o, i) => {
                     o.x -= o.s;
-                    // 인간 친화적 판정 (여백 10px)
-                    let hx = p.x + 10, hy = p.y + 10, hw = 20, hh = 25;
-                    if(p.inv <= 0 && hx < o.x + o.w && hx + hw > o.x && hy < o.y + o.h && hy + hh > o.y) {
+                    // 히트박스 판정 (조금 더 여유 있게)
+                    if(p.inv <= 0 && p.x+12 < o.x+o.w && p.x+28 > o.x && p.y+10 < o.y+o.h && p.y+35 > o.y) {
                         p.hp--; p.inv = 60;
                         if(p.hp <= 0) { isLive = false; saveScore(score); ovl.style.display = 'flex'; }
                     }
-                    if(o.x < -200) obs.splice(i, 1);
+                    if(o.x < -100) obs.splice(i, 1);
                 });
 
-                items.forEach((it, i) => {
-                    it.x -= s;
-                    if(Math.abs(p.x - it.x) < 40 && Math.abs(p.y - it.y) < 70) {
-                        if(p.hp < 3) p.hp++;
-                        items.splice(i, 1);
-                    }
-                });
                 document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
             }
 
+            // 그리기 영역
             ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 900, 450);
-            ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(0, 397, 900, 2);
-            for(let i=0; i<3; i++) drawHeart(50+(i*35), 50, 15, "#ffcc00", i >= p.hp);
+            ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.strokeRect(0, 400, 900, 1);
             
-            // 2단 점프 시 황금색 피드백
-            ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0, 242, 255, 0.2)");
-            ctx.fillRect(p.x, p.y, 40, 45);
+            for(let i=0; i<3; i++) drawHeart(40+(i*30), 40, 12, "#ffcc00", i >= p.hp);
+            
+            // 캐릭터 (2단 점프 시 색상 변경 피드백)
+            ctx.fillStyle = (p.jc === 2) ? "#ffcc00" : (p.inv % 10 < 5 ? "#00f2ff" : "rgba(0,242,255,0.2)");
+            ctx.fillRect(p.x, p.y, 40, 48);
             
             ctx.fillStyle = "#ff0077"; 
-            obs.forEach(o => {
-                ctx.fillRect(o.x, o.y, o.w, o.h);
-                ctx.strokeStyle = "rgba(255, 0, 119, 0.4)";
-                ctx.strokeRect(o.x-2, o.y-2, o.w+4, o.h+4);
-            });
-            items.forEach(it => drawHeart(it.x, it.y, 15, "#ffcc00", false));
+            obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+            
             requestAnimationFrame(loop);
         }
         loop();
