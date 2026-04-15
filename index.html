@@ -3,38 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: PRO EDITION</title>
+    <title>NEON DASH: RESPONSIVE</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
     <style>
         :root { --neon: #00f2ff; --pink: #ff0077; --gold: #ffcc00; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { height: 100vh; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; color: white; }
         
-        #game-view { position: relative; flex: 1; width: 100%; display: flex; background: #050508; overflow: hidden; }
-        canvas { width: 100%; height: auto; max-height: 100%; margin: auto; display: block; z-index: 1; touch-action: none; }
+        /* 전체 화면 설정: 여백(safe-area) 확보 */
+        body { 
+            height: 100vh; background: #000; overflow: hidden; 
+            display: flex; flex-direction: column; 
+            font-family: -apple-system, system-ui, sans-serif; 
+            color: white;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
         
-        /* 메뉴 레이어 */
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-        #title { font-size: 28px; font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 15px; }
+        /* 게임 뷰: 화면 크기에 맞춰 유동적으로 변화 */
+        #game-view { 
+            position: relative; flex: 1; width: 100%; 
+            display: flex; justify-content: center; align-items: center;
+            background: #050508; overflow: hidden; 
+        }
         
-        .settings-box { background: #111; padding: 15px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 320px; margin-bottom: 15px; }
-        .setting-item { margin-bottom: 12px; }
+        /* 캔버스: 해상도 유지를 위해 고정비율 유지하며 확장 */
+        canvas { 
+            max-width: 100%; max-height: 100%; 
+            object-fit: contain; 
+            z-index: 1; touch-action: none; 
+        }
+        
+        /* 메뉴 레이어: 모바일에서 안 잘리도록 padding과 스크롤 허용 */
+        .overlay { 
+            position: absolute; inset: 0; 
+            background: rgba(0, 0, 0, 0.9); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 9999; padding: 20px; 
+            overflow-y: auto; /* 내용이 많으면 스크롤 가능하게 */
+        }
+        
+        #title { font-size: clamp(20px, 5vw, 28px); font-weight: 900; text-shadow: 0 0 15px var(--neon); margin-bottom: 15px; }
+        
+        .settings-box { 
+            background: #111; padding: 15px; border-radius: 15px; border: 1px solid var(--neon); 
+            width: 100%; max-width: 300px; margin-bottom: 10px; 
+        }
+        .setting-item { margin-bottom: 10px; }
         .setting-item label { color: #888; font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px; text-align: left; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--neon); }
-        .val-display { color: var(--neon); font-size: 18px; font-weight: 900; margin-top: 2px; }
+        input[type="range"] { width: 100%; height: 25px; cursor: pointer; accent-color: var(--neon); }
+        .val-display { color: var(--neon); font-size: 16px; font-weight: 900; }
 
-        /* 랭킹 보드 */
-        .rank-box { width: 100%; max-width: 320px; background: #0a0a0a; border: 1px solid #333; border-radius: 15px; padding: 10px; margin-bottom: 15px; font-size: 13px; }
-        .rank-title { color: var(--gold); font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 3px; }
-        #rank-list { list-style: none; text-align: left; max-height: 80px; overflow-y: auto; }
+        .rank-box { 
+            width: 100%; max-width: 300px; background: #0a0a0a; 
+            border: 1px solid #333; border-radius: 12px; padding: 8px; margin-bottom: 10px; 
+        }
+        .rank-title { color: var(--gold); font-size: 12px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #222; }
+        #rank-list { list-style: none; text-align: left; font-size: 12px; }
         #rank-list li { display: flex; justify-content: space-between; padding: 2px 5px; color: #ccc; }
 
-        .btn-start { background: var(--neon); color: #000; padding: 12px 60px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; box-shadow: 0 0 15px var(--neon); }
+        .btn-start { background: var(--neon); color: #000; padding: 12px 50px; font-size: 18px; font-weight: 900; border-radius: 50px; cursor: pointer; border: none; }
 
-        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-top: 1px solid #222; }
-        #ad-area { width: 100%; height: 60px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
+        /* 하단 바: 모바일 네비게이션바 고려 */
+        #stat-bar { 
+            width: 100%; height: 45px; background: #000; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 20px; border-top: 1px solid #222; font-size: 13px;
+        }
+        
+        #ad-area { 
+            width: 100%; min-height: 50px; background: #000; 
+            display: flex; justify-content: center; align-items: center; 
+        }
     </style>
 </head>
 <body>
@@ -45,33 +85,33 @@
             <div id="title">NEON DASH AI</div>
             
             <div class="rank-box">
-                <div class="rank-title">🏆 TOP 5 RANKING</div>
+                <div class="rank-title">🏆 TOP 5</div>
                 <ul id="rank-list"></ul>
             </div>
 
             <div class="settings-box">
                 <div class="setting-item">
-                    <label>GAME SPEED (1-16)</label>
+                    <label>SPEED</label>
                     <input type="range" id="speed-slider" min="1" max="16" value="10">
                     <div id="speed-display" class="val-display">10</div>
                 </div>
                 <div class="setting-item">
-                    <label>OBSTACLE SIZE (5-40px)</label>
+                    <label>OBSTACLE SIZE</label>
                     <input type="range" id="size-slider" min="5" max="40" value="15">
                     <div id="size-display" class="val-display">15px</div>
                 </div>
             </div>
             
-            <button class="btn-start" id="start-btn">RUN ENGINE</button>
+            <button class="btn-start" id="start-btn">START</button>
         </div>
     </div>
 
     <div id="stat-bar">
         <div id="score-txt" style="font-weight:900;">SCORE: 0</div>
-        <div style="width: 80px; height: 8px; background: #222; border-radius: 4px; overflow: hidden;">
+        <div style="width: 70px; height: 6px; background: #222; border-radius: 3px; overflow: hidden;">
             <div id="f-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00f2ff, #ff0077);"></div>
         </div>
-        <div id="best-txt" style="color:var(--gold); font-size:12px;">BEST: 0</div>
+        <div id="best-txt" style="color:var(--gold);">BEST: 0</div>
     </div>
 
     <div id="ad-area">
@@ -85,6 +125,8 @@
     <script>
     const cvs = document.getElementById('cvs');
     const ctx = cvs.getContext('2d');
+    
+    // 캔버스 논리적 해상도 고정 (이 비율을 유지하며 화면에 꽉 참)
     cvs.width = 900; cvs.height = 450;
 
     const COLORS = { neon: '#00f2ff', pink: '#ff0077', gold: '#ffcc00', bg: '#050508' };
@@ -98,21 +140,12 @@
     let player = { x: 120, y: 350, dy: 0, jCount: 0 };
     let obs = [], coins = [], isLive = false, score = 0, gauge = 0, isFever = false;
 
-    // 랭킹 데이터 처리
+    // 랭킹 시스템
     function updateRankBoard() {
         let ranks = JSON.parse(localStorage.getItem('neon_ranks') || '[]');
         ranks.sort((a,b) => b - a);
-        const list = document.getElementById('rank-list');
-        list.innerHTML = ranks.slice(0, 5).map((s, i) => `<li><span>#${i+1}</span> <b>${Math.floor(s)}</b></li>`).join('') || "No Record";
+        document.getElementById('rank-list').innerHTML = ranks.slice(0, 5).map((s, i) => `<li>#${i+1} <b>${Math.floor(s)}</b></li>`).join('') || "No Record";
         document.getElementById('best-txt').innerText = "BEST: " + (ranks[0] ? Math.floor(ranks[0]) : 0);
-    }
-
-    function saveScore(s) {
-        let ranks = JSON.parse(localStorage.getItem('neon_ranks') || '[]');
-        ranks.push(s);
-        ranks.sort((a,b) => b - a);
-        localStorage.setItem('neon_ranks', JSON.stringify(ranks.slice(0, 10)));
-        updateRankBoard();
     }
 
     sSpeed.oninput = () => { config.baseSpeed = parseInt(sSpeed.value); dSpeed.innerText = sSpeed.value; };
@@ -127,17 +160,20 @@
 
     function gameOver() {
         isLive = false;
-        saveScore(score);
-        document.getElementById('title').innerText = "ENGINE CRASHED";
+        let ranks = JSON.parse(localStorage.getItem('neon_ranks') || '[]');
+        ranks.push(score);
+        ranks.sort((a,b) => b - a);
+        localStorage.setItem('neon_ranks', JSON.stringify(ranks.slice(0, 10)));
+        updateRankBoard();
+        document.getElementById('title').innerText = "GAME OVER";
         ovl.style.display = 'flex';
     }
 
-    // 입력 핸들러
     function handleInput(e) {
         if (!isLive || e.target.closest('.settings-box')) return;
         if (player.jCount < 2) {
-            let speed = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
-            let force = -(17 + (speed * 0.75));
+            let s = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
+            let force = -(17 + (s * 0.75));
             player.dy = (player.jCount === 0) ? force : force * 0.8;
             player.jCount++;
         }
@@ -152,7 +188,6 @@
         if(!isLive) return;
         let s = (config.baseSpeed + (score/2000)) * (isFever ? 1.4 : 1);
         player.g = s < 10 ? 0.7 + (s * 0.05) : 1.1 + (s * 0.04);
-        
         score += s / 15;
         player.dy += player.g; player.y += player.dy;
         if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
@@ -163,14 +198,11 @@
             obs.push({ x: 950, y: py - config.obsSize, w: config.obsSize, h: config.obsSize, s: s });
             config.timer = 200 + Math.random() * 200;
         }
-
         if(Math.random() < 0.02) coins.push({ x: 950, y: 200 + Math.random() * 150 });
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            if(!isFever && Math.abs((player.x + 20) - (o.x + o.w/2)) < (18 + o.w/2) && Math.abs((player.y + 22) - (o.y + o.h/2)) < (20 + o.h/2)) {
-                gameOver();
-            }
+            if(!isFever && Math.abs((player.x + 20) - (o.x + o.w/2)) < (18 + o.w/2) && Math.abs((player.y + 22) - (o.y + o.h/2)) < (20 + o.h/2)) gameOver();
             if(o.x < -100) obs.splice(i, 1);
         });
 
@@ -184,7 +216,6 @@
             }
             if(c.x < -100) coins.splice(i, 1);
         });
-
         if(isFever) { gauge -= 0.5; if(gauge <= 0) isFever = false; }
 
         document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
@@ -195,21 +226,15 @@
         ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, 900, 450);
         ctx.strokeStyle = isFever ? COLORS.pink : '#222';
         ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
-        
         ctx.fillStyle = isFever ? '#fff' : (player.jCount === 2 ? COLORS.gold : COLORS.neon);
         ctx.fillRect(player.x, player.y, 40, 45);
-
         ctx.fillStyle = COLORS.pink;
         obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-        
         ctx.fillStyle = COLORS.gold;
         coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
     }
 
-    function loop() {
-        update(); draw(); requestAnimationFrame(loop);
-    }
-
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
     updateRankBoard();
     loop();
     </script>
