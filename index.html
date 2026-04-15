@@ -10,55 +10,100 @@
     <style>
         :root { --gold: #ffcc00; --neon: #00f2ff; --pink: #ff0077; --bg: #050508; }
         * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
-        body { height: 100vh; background: #000; overflow: hidden; display: flex; flex-direction: column; font-family: sans-serif; color: white; }
         
-        /* [레이아웃 핵심 패치] 캔버스 해상도 고정 및 object-fit Contain */
-        #game-view { position: relative; flex: 1; width: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        canvas { width: 100%; height: 100%; object-fit: contain; }
+        /* [PC/모바일 공용 레이아웃 최적화] */
+        body { 
+            height: 100vh; 
+            height: -webkit-fill-available; 
+            background: #000; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            font-family: 'Pretendard', sans-serif; 
+            color: white; 
+        }
         
-        /* 메뉴 레이어 */
-        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; padding: 20px; }
-        #title { font-size: 42px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 10px; }
-        
-        /* 랭킹 표시부 추가 */
-        .rank-display { margin-bottom: 20px; text-align: center; }
-        .rank-label { font-size: 14px; color: #aaa; letter-spacing: 2px; }
-        .rank-value { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        /* 게임 화면이 잘리지 않도록 max-height 설정 추가 */
+        #game-container { 
+            position: relative; 
+            flex: 1; 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: var(--bg);
+            overflow: hidden;
+        }
 
-        .settings-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 340px; margin-bottom: 15px; pointer-events: auto; }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .val-badge { background: var(--gold); color: #000; padding: 2px 10px; border-radius: 5px; font-weight: 900; font-size: 13px; }
+        /* 캔버스 비율 유지 (900:450) */
+        canvas { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            background: #000;
+        }
         
-        .difficulty-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .diff-btn { background: #222; border: 1px solid #444; color: #888; padding: 12px 0; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        /* 메뉴 레이어 디자인 강화 */
+        .overlay { 
+            position: absolute; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.9); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100;
+        }
+
+        #title { font-size: clamp(32px, 8vw, 48px); font-weight: 900; color: var(--gold); text-shadow: 0 0 20px var(--gold); margin-bottom: 5px; }
+        
+        /* 랭킹 표시 영역 강조 */
+        .rank-box { margin-bottom: 25px; text-align: center; }
+        .rank-label { font-size: 14px; color: #888; letter-spacing: 3px; margin-bottom: 5px; }
+        .rank-value { font-size: clamp(28px, 6vw, 36px); font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.4); }
+
+        .settings-wrap { 
+            background: rgba(255,255,255,0.07); 
+            padding: 20px; 
+            border-radius: 24px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            width: 90%; 
+            max-width: 360px; 
+            margin-bottom: 20px; 
+        }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; }
+        .badge { background: var(--gold); color: #000; padding: 3px 12px; border-radius: 6px; font-size: 14px; }
+        
+        .diff-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .diff-btn { background: #1a1a1a; border: 1px solid #333; color: #777; padding: 12px 0; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
         .diff-btn.active { background: var(--gold); border-color: var(--gold); color: #000; box-shadow: 0 0 15px rgba(255,204,0,0.4); }
 
-        input[type="range"] { width: 100%; height: 10px; accent-color: var(--gold); cursor: pointer; margin: 10px 0 15px; }
-        .btn-start { background: var(--gold); color: #000; padding: 18px 70px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; pointer-events: auto; transition: 0.2s; }
-        .btn-start:active { transform: scale(0.95); }
+        input[type="range"] { width: 100%; height: 8px; accent-color: var(--gold); cursor: pointer; margin: 15px 0 20px; }
+        .btn-start { background: var(--gold); color: #000; padding: 20px 80px; font-size: 24px; font-weight: 900; border-radius: 100px; border: none; cursor: pointer; transition: 0.3s; }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--gold); }
 
-        /* 하단 정보바 및 광고 */
-        #stat-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; }
-        #ad-bottom { width: 100%; height: 65px; background: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; border-top: 1px solid #222; }
+        /* 하단 정보바 & 광고 레이아웃 고정 */
+        #bottom-bar { width: 100%; height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-top: 1px solid #222; z-index: 10; font-size: 14px; font-weight: bold; }
+        #ad-area { width: 100%; height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <div id="game-view">
+    <div id="game-container">
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
-            <div id="title">Neon Runner</div>
+            <div id="title">NEON RUNNER</div>
             
-            <div class="rank-display">
+            <div class="rank-box">
                 <div class="rank-label">TOP SCORE</div>
                 <div id="menu-best" class="rank-value">0</div>
             </div>
 
-            <div class="settings-box">
-                <div class="setting-row"><span>기본 속도</span><span id="speed-val" class="val-badge">12</span></div>
+            <div class="settings-wrap">
+                <div class="row"><span>ENGINE SPEED</span><span id="speed-val" class="badge">12</span></div>
                 <input type="range" id="speed-slider" min="1" max="24" value="12">
-                <div class="setting-row"><span>난이도 (LEVEL)</span><span id="diff-label" class="val-badge">2</span></div>
-                <div class="difficulty-grid" id="diff-selector">
+                <div class="row"><span>DIFFICULTY</span><span id="diff-label" class="badge">2</span></div>
+                <div class="diff-grid" id="diff-selector">
                     <button class="diff-btn" data-level="1">1</button>
                     <button class="diff-btn active" data-level="2">2</button>
                     <button class="diff-btn" data-level="3">3</button>
@@ -70,57 +115,51 @@
         </div>
     </div>
 
-    <div id="stat-bar">
-        <div id="score-txt" style="font-weight:900;">SCORE: 0</div>
-        <div id="best-txt" style="color:var(--gold); font-weight:bold;">BEST: 0</div>
+    <div id="bottom-bar">
+        <div id="score-txt">SCORE: 0</div>
+        <div id="best-txt" style="color:var(--gold);">BEST: 0</div>
     </div>
 
-    <div id="ad-bottom">
+    <div id="ad-area">
         <ins class="adsbygoogle"
-             style="display:block; width:320px; height:50px"
+             style="display:inline-block; width:320px; height:50px"
              data-ad-client="ca-pub-7503206245117361"
-             data-ad-slot="9285335402"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
+             data-ad-slot="9285335402"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
     <script>
     window.onload = function() {
         const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
+        cvs.width = 900; cvs.height = 450;
         
-        // 캔버스 내부 해상도 고정
-        cvs.width = 900;
-        cvs.height = 450;
-        
-        const sSpeed = document.getElementById('speed-slider'), vSpeed = document.getElementById('speed-val');
         const ovl = document.getElementById('ovl'), startBtn = document.getElementById('start-btn');
+        const sSpeed = document.getElementById('speed-slider'), vSpeed = document.getElementById('speed-val');
         const diffBtns = document.querySelectorAll('.diff-btn'), diffLabel = document.getElementById('diff-label');
         const menuBest = document.getElementById('menu-best');
 
-        let isLive = false, score = 0, currentDiff = 2, player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
-        let obs = [], items = [], config = { speed: 12, size: 20, timer: 0, gravity: 0.9 };
+        let isLive = false, score = 0, currentDiff = 2;
+        let player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
+        let obs = [], items = [], config = { speed: 12, timer: 0 };
 
         const diffSettings = {
-            1: { speedMult: 0.8, spawnMult: 1.3, gravity: 2.4 },
-            2: { speedMult: 1.0, spawnMult: 1.0, gravity: 2.6 },
-            3: { speedMult: 1.3, spawnMult: 0.8, gravity: 2.8 },
-            4: { speedMult: 1.6, spawnMult: 0.7, gravity: 3.0 },
-            5: { speedMult: 2.0, spawnMult: 0.5, gravity: 3.2 }
+            1: { sm: 0.8, spm: 1.3, g: 2.4 },
+            2: { sm: 1.0, spm: 1.0, g: 2.6 },
+            3: { sm: 1.3, spm: 0.8, g: 2.8 },
+            4: { sm: 1.6, spm: 0.7, g: 3.0 },
+            5: { sm: 2.0, spm: 0.5, g: 3.2 }
         };
 
-        // 최고 기록 업데이트 함수
-        const updateBest = () => {
-            const best = localStorage.getItem('nr_best') || 0;
-            menuBest.innerText = Math.floor(best);
-            document.getElementById('best-txt').innerText = "BEST: " + Math.floor(best);
+        const updateBestDisplay = () => {
+            const best = Math.floor(localStorage.getItem('nr_best') || 0);
+            menuBest.innerText = best;
+            document.getElementById('best-txt').innerText = "BEST: " + best;
         };
-        updateBest();
+        updateBestDisplay();
 
         sSpeed.oninput = () => { vSpeed.innerText = sSpeed.value; };
         diffBtns.forEach(btn => {
-            btn.onclick = (e) => {
-                e.stopPropagation();
+            btn.onclick = () => {
                 diffBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentDiff = parseInt(btn.dataset.level);
@@ -138,7 +177,7 @@
         }
 
         const jump = (e) => {
-            if(!isLive || e.target.closest('.settings-box') || e.target === startBtn) return;
+            if(!isLive || e.target.closest('.settings-wrap') || e.target === startBtn) return;
             if(player.jCount < 2) {
                 const s = (config.speed + (score/2000)) * 0.1;
                 player.dy = (player.jCount === 0) ? -(24 + s) : -(18 + s);
@@ -146,14 +185,13 @@
             }
         };
 
-        window.addEventListener('touchstart', (e) => { jump(e); if(isLive) e.preventDefault(); }, { passive: false });
+        window.addEventListener('touchstart', (e) => { if(isLive) e.preventDefault(); jump(e); }, { passive: false });
         window.addEventListener('mousedown', jump);
         
-        startBtn.onclick = (e) => {
-            e.stopPropagation();
+        startBtn.onclick = () => {
             const d = diffSettings[currentDiff];
-            config.speed = parseInt(sSpeed.value) * d.speedMult;
-            config.gravity = d.gravity;
+            config.speed = parseInt(sSpeed.value) * d.sm;
+            config.gravity = d.g;
             player = { x: 120, y: 350, dy: 0, jCount: 0, hp: 3, invul: 0 };
             obs = []; items = []; score = 0; isLive = true;
             ovl.style.display = 'none';
@@ -163,19 +201,22 @@
             if(!isLive) return;
             const d = diffSettings[currentDiff];
             let s = config.speed + (score/2000);
-            player.dy += config.gravity; 
-            player.y += player.dy;
+            player.dy += config.gravity; player.y += player.dy;
             if(player.y > 350) { player.y = 350; player.dy = 0; player.jCount = 0; }
             if(player.invul > 0) player.invul--;
             score += (s/10) * currentDiff; 
             config.timer -= s;
             if(config.timer <= 0) { 
-                const startX = 950;
-                obs.push({ x: startX, y: 395-20, w: 20, h: 20, s: s });
-                if(Math.random() < 0.3) items.push({ x: startX + 100, y: 220, type: 'heart' });
-                config.timer = (450 + Math.random() * 300) * (12/s) * d.spawnMult; 
+                const pattern = Math.random();
+                if(pattern < 0.3) {
+                    for(let i=0; i<2; i++) obs.push({ x: 950 + (i * 280), y: 375, w: 20, h: 20, s: s });
+                } else {
+                    obs.push({ x: 950, y: 375, w: 20, h: 20, s: s });
+                }
+                if(Math.random() < 0.2) items.push({ x: 1050, y: 220, type: 'heart' });
+                config.timer = (450 + Math.random() * 300) * (12/s) * d.spm; 
             }
-            obs.forEach((o, i) => { o.x -= o.s; if(player.invul <= 0 && player.x + 5 < o.x + o.w && player.x + 30 > o.x && player.y + 40 > o.y) { player.hp--; player.invul = 60; if(player.hp <= 0) { isLive = false; const best = localStorage.getItem('nr_best') || 0; if(score > best) localStorage.setItem('nr_best', score); updateBest(); ovl.style.display = 'flex'; } } if(o.x < -100) obs.splice(i, 1); });
+            obs.forEach((o, i) => { o.x -= o.s; if(player.invul <= 0 && player.x + 5 < o.x + o.w && player.x + 30 > o.x && player.y + 40 > o.y) { player.hp--; player.invul = 60; if(player.hp <= 0) { isLive = false; const best = localStorage.getItem('nr_best') || 0; if(score > best) localStorage.setItem('nr_best', score); updateBestDisplay(); ovl.style.display = 'flex'; } } if(o.x < -100) obs.splice(i, 1); });
             items.forEach((it, i) => { it.x -= s; if(Math.abs(player.x - it.x) < 45 && Math.abs(player.y - it.y) < 60) { if(it.type === 'heart' && player.hp < 3) player.hp++; items.splice(i, 1); } });
             document.getElementById('score-txt').innerText = "SCORE: " + Math.floor(score);
         }
