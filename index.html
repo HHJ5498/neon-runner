@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DASH: PRO TUNED</title>
+    <title>NEON DASH: CUSTOM SPEED</title>
     
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7503206245117361" crossorigin="anonymous"></script>
 
@@ -22,7 +22,7 @@
         .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         .btn-start { background: var(--neon-blue); color: #000; padding: 20px 60px; font-size: 24px; font-weight: 900; border-radius: 50px; box-shadow: 0 0 25px var(--neon-blue); cursor: pointer; border: none; }
         #title { color: #fff; font-size: 32px; margin-bottom: 30px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-blue); }
-        #mode-info { color: var(--gold); font-size: 12px; margin-top: 10px; font-weight: bold; font-family: monospace; }
+        #mode-info { color: var(--gold); font-size: 12px; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -31,8 +31,8 @@
         <canvas id="cvs"></canvas>
         <div id="ovl" class="overlay">
             <div id="title">NEON DASH</div>
-            <button class="btn-start" id="start-btn">START GAME</button>
-            <div id="mode-info">ANALYZING SYSTEM...</div>
+            <button class="btn-start" id="start-btn">START</button>
+            <div id="mode-info">LOADING...</div>
         </div>
     </div>
 
@@ -54,17 +54,16 @@
     const ctx = cvs.getContext('2d');
     cvs.width = 900; cvs.height = 450;
 
-    // 💡 [PRO TUNING] 기기별 최적화 물리 파라미터
+    // 💡 사용자가 요청하신 속도 설정 (PC: 12, Android: 18)
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     const config = {
-        // 모바일은 25% 더 빠르게, PC는 안정감 있게 설정
-        baseSpeed: isMobile ? 24 : 18,     
-        jumpPower: isMobile ? -27 : -23,   // 속도가 빠를수록 점프도 더 높아야 함
-        gravity: 1.5,
-        spawnRate: isMobile ? 22 : 32      // 모바일은 장애물이 더 자주 나옴
+        baseSpeed: isMobile ? 18 : 12,    // 안드로이드 18, PC 12
+        jumpPower: isMobile ? -24 : -21,  // 속도에 맞춘 최적 점프력
+        gravity: 1.4,
+        spawnRate: isMobile ? 28 : 38     // 속도 차이에 따른 장애물 생성 간격 조정
     };
     
-    document.getElementById('mode-info').innerText = isMobile ? "SYSTEM: ANDROID_MOBILE / MODE: SPEED" : "SYSTEM: DESKTOP_PC / MODE: STABLE";
+    document.getElementById('mode-info').innerText = isMobile ? "MOBILE MODE: SPEED 18" : "PC MODE: SPEED 12";
 
     const game = {
         isLive: false, score: 0, gauge: 0, frame: 0, fever: false,
@@ -83,7 +82,6 @@
     const p = { x: 120, y: 350, dy: 0, g: config.gravity, j: config.jumpPower, jCount: 0 };
     let obs = [], coins = [];
 
-    // 입력 처리 (통합)
     const btn = document.getElementById('start-btn');
     btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); game.start(); };
 
@@ -102,73 +100,56 @@
         if(!game.isLive) return;
         game.frame++;
         
-        // 시간이 지날수록 미세하게 빨라지는 가속도 공식
-        let speedMult = game.fever ? 1.6 : 1;
-        let currentSpeed = (config.baseSpeed + (game.score/600)) * speedMult; 
-        game.score += currentSpeed / 12; // 점수 증가율 최적화
+        let currentSpeed = (config.baseSpeed + (game.score/900)) * (game.fever ? 1.6 : 1); 
+        game.score += currentSpeed / 11;
         
         p.dy += p.g; p.y += p.dy;
         if(p.y > 350) { p.y = 350; p.dy = 0; p.jCount = 0; }
 
-        // 장애물 생성
         if(!game.fever) {
             if(game.frame % config.spawnRate === 0) {
-                obs.push({ x: 950, y: Math.random() > 0.4 ? 350 : 200, s: currentSpeed });
+                obs.push({ x: 950, y: Math.random() > 0.5 ? 350 : 200, s: currentSpeed });
             }
-            if(game.frame % 45 === 0) {
-                coins.push({ x: 950, y: 150 + Math.random() * 180 });
+            if(game.frame % 40 === 0) {
+                coins.push({ x: 950, y: 150 + Math.random() * 200 });
             }
         } else {
-            game.gauge -= 0.7; // 피버 모드 유지 시간 밸런싱
+            game.gauge -= 0.6;
             if(game.gauge <= 0) game.fever = false;
         }
 
         obs.forEach((o, i) => {
             o.x -= o.s;
-            // 충돌 판정 정교화 (네온 사각형 크기 기반)
             if(!game.fever && Math.abs(p.x - o.x) < 32 && Math.abs(p.y - o.y) < 35) game.end();
             if(o.x < -100) obs.splice(i, 1);
         });
 
         coins.forEach((c, i) => {
             c.x -= currentSpeed;
-            // 자석 효과 (피버 모드일 때)
-            if(game.fever) { c.x += (p.x - c.x) * 0.2; c.y += (p.y - c.y) * 0.2; }
-            
+            if(game.fever) { c.x += (p.x - c.x) * 0.22; c.y += (p.y - c.y) * 0.22; }
             if(Math.abs(p.x - c.x) < 50 && Math.abs(p.y - c.y) < 50) {
                 coins.splice(i, 1);
-                game.gauge = Math.min(100, game.gauge + 8);
+                game.gauge = Math.min(100, game.gauge + 9);
                 if(game.gauge >= 100 && !game.fever) game.fever = true;
             }
             if(c.x < -100) coins.splice(i, 1);
         });
+
+        document.getElementById('score').innerText = Math.floor(game.score);
+        document.getElementById('coins').innerText = Math.floor(game.gauge) + "%";
+        document.getElementById('fever-fill').style.width = game.gauge + "%";
     }
 
     function draw() {
         ctx.fillStyle = '#010103'; ctx.fillRect(0,0,900,450);
-        
-        // 바닥 선 (네온 효과)
         ctx.strokeStyle = game.fever ? '#ff0077' : '#00f2ff';
-        ctx.lineWidth = 4; ctx.shadowBlur = 10; ctx.shadowColor = ctx.strokeStyle;
-        ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // 플레이어
+        ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 395); ctx.lineTo(900, 395); ctx.stroke();
         ctx.fillStyle = game.fever ? '#fff' : '#00f2ff';
         ctx.fillRect(p.x, p.y, 40, 45);
-
-        // 장애물
         ctx.fillStyle = '#ff0077';
         obs.forEach(o => { ctx.fillRect(o.x, o.y, 35, 45); });
-
-        // 코인 (에너지)
         ctx.fillStyle = '#ffcc00';
-        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 9, 0, 7); ctx.fill(); });
-        
-        // UI 업데이트
-        document.getElementById('score').innerText = Math.floor(game.score);
-        document.getElementById('coins').innerText = Math.floor(game.gauge) + "%";
-        document.getElementById('fever-fill').style.width = game.gauge + "%";
+        coins.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, 7); ctx.fill(); });
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
