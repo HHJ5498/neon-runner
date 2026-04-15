@@ -18,7 +18,7 @@
         }
 
         @media (max-width: 600px) {
-            #canvas-box { max-width: 100%; height: 75vh; } /* 모바일 세로 비율 최적화 */
+            #canvas-box { max-width: 100%; height: 80vh; } 
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -32,7 +32,6 @@
         #ranking-box { width: 240px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px solid #444; }
         .rank-item { display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0; color: #eee; font-family: monospace; }
         .btn-start { background: var(--gold); color: #000; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; }
-        .btn-start:active { transform: scale(0.95); }
 
         #stat-bar { height: 55px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; border-top: 1px solid #222; font-weight: bold; }
         #ad-box { height: 70px; background: #000; display: flex; justify-content: center; align-items: center; border-top: 1px solid #222; }
@@ -71,13 +70,11 @@
 
     function initEnv() {
         isMobile = window.innerWidth <= 600;
-        // 캔버스 픽셀 해상도 설정
-        cvs.width = isMobile ? 600 : 1000;
-        cvs.height = isMobile ? 800 : 500;
+        cvs.width = isMobile ? 600 : 1200; // PC 해상도 가로폭 확장
+        cvs.height = isMobile ? 900 : 600; // 화면 높이 상향
         
         const gY = cvs.height - 100;
         
-        // [점프 물리 튜닝]
         p = { 
             x: isMobile ? 80 : 150, 
             y: gY - 60, 
@@ -89,18 +86,19 @@
             h: 60 
         };
 
+        // [핵심 튜닝] 점프 높이 상향 & 하강 속도 대폭 증가
         cfg = { 
-            spd: isMobile ? 10 : 13, 
-            grav: isMobile ? 1.5 : 2.0,  // 중력 완화 (부드러운 하강)
-            jump: isMobile ? -23 : -25,  // 점프력 강화
+            spd: isMobile ? 12 : 15, 
+            grav: isMobile ? 2.8 : 3.2,  // 하강 속도를 위해 중력 상향
+            jump: isMobile ? -36 : -38,  // 점프력 대폭 강화 (높게)
             next: 0, 
-            gap: isMobile ? 480 : 650 
+            gap: isMobile ? 550 : 750 
         };
         obs = []; score = 0;
     }
 
     function updateRank() {
-        const ranks = JSON.parse(localStorage.getItem('neon_v5') || "[]");
+        const ranks = JSON.parse(localStorage.getItem('neon_v6') || "[]");
         const list = document.getElementById('ranking-box');
         list.innerHTML = '<div style="text-align:center;color:#ffcc00;font-weight:bold;margin-bottom:10px;">TOP 5 RANKING</div>';
         ranks.slice(0, 5).forEach((s, i) => {
@@ -117,7 +115,6 @@
         ovl.style.display = 'none';
     };
 
-    // 터치/클릭 즉각 반응 (이벤트 리스너 통합)
     const handleAction = (e) => {
         if(!isLive) return;
         if(p.jc < 2) { 
@@ -130,36 +127,34 @@
     function loop() {
         const gY = cvs.height - 100;
         if(isLive) {
-            cfg.spd += 0.0018; // 난이도 상승 속도
+            cfg.spd += 0.0022; 
             p.dy += cfg.grav; 
             p.y += p.dy;
 
-            // 바닥 처리 및 점프 초기화
             if(p.y >= gY - p.h) { 
                 p.y = gY - p.h; 
                 p.dy = 0; 
                 p.jc = 0; 
             }
 
-            score += cfg.spd / 10;
+            score += cfg.spd / 8;
             cfg.next -= cfg.spd;
 
             if(cfg.next <= 0) {
-                let h = Math.random() > 0.7 ? 50 : 90;
+                let h = Math.random() > 0.7 ? 50 : 100;
                 obs.push({ x: cvs.width + 100, y: gY - h, w: 35, h: h });
-                cfg.next = (cfg.gap + Math.random() * 300) * (10 / cfg.spd);
+                cfg.next = (cfg.gap + Math.random() * 300) * (15 / cfg.spd);
             }
 
             obs.forEach((o, i) => {
                 o.x -= cfg.spd;
-                // 히트박스 판정 (여유있게 조정)
-                if(p.inv <= 0 && p.x + 8 < o.x + o.w && p.x + p.w - 8 > o.x && p.y + 8 < o.y + o.h && p.y + p.h - 5 > o.y) {
+                if(p.inv <= 0 && p.x + 10 < o.x + o.w && p.x + p.w - 10 > o.x && p.y + 10 < o.y + o.h && p.y + p.h - 5 > o.y) {
                     p.hp--; p.inv = 60;
                     if(p.hp <= 0) {
                         isLive = false;
-                        let r = JSON.parse(localStorage.getItem('neon_v5') || "[]");
+                        let r = JSON.parse(localStorage.getItem('neon_v6') || "[]");
                         r.push(score); r.sort((a,b)=>b-a);
-                        localStorage.setItem('neon_v5', JSON.stringify(r.slice(0, 5)));
+                        localStorage.setItem('neon_v6', JSON.stringify(r.slice(0, 5)));
                         updateRank();
                         ovl.style.display = 'flex';
                     }
@@ -170,22 +165,18 @@
             document.getElementById('now-score').innerText = "SCORE: " + Math.floor(score);
         }
 
-        // 배경 및 바닥
         ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, cvs.width, cvs.height);
-        ctx.strokeStyle = "#333"; ctx.lineWidth = 5;
+        ctx.strokeStyle = "#444"; ctx.lineWidth = 5;
         ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(cvs.width, gY); ctx.stroke();
         
-        // 캐릭터 (네온 블루 글로우)
-        ctx.shadowBlur = 10; ctx.shadowColor = "#00f2ff";
+        ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
         ctx.fillStyle = (p.inv % 10 < 5) ? "#00f2ff" : "rgba(0,242,255,0.2)";
         ctx.fillRect(p.x, p.y, p.w, p.h);
-        ctx.shadowBlur = 0; // 다른 객체에는 그림자 해제
+        ctx.shadowBlur = 0;
 
-        // 체력 (골드)
         ctx.fillStyle = "#ffcc00";
         for(let i=0; i<p.hp; i++) ctx.fillRect(25 + (i*30), 25, 18, 18);
 
-        // 장애물 (네온 핑크)
         ctx.fillStyle = "#ff0077";
         obs.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
 
